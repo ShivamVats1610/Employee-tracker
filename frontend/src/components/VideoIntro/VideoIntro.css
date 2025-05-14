@@ -1,0 +1,50 @@
+.video-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 9999;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+#intro-video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.overlay-image {
+  position: absolute;
+  width: 280px; /* adjust as needed */
+  height: auto;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 10000;
+}
+
+/* Mobile responsiveness */
+@media (max-width: 768px) {
+  .overlay-image {
+    width: 200px; /* smaller width for mobile */
+  }
+
+  #intro-video {
+    object-fit: contain; /* ensure video content fits smaller screens */
+  }
+}
+
+@media (max-width: 480px) {
+  .overlay-image {
+    width: 150px; /* even smaller width for very small screens */
+  }
+  
+  #intro-video {
+    background-color: black;
+    width: 900px;
+    /* object-fit: contain;  */
+  }
+}
