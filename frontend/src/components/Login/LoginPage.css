@@ -37,6 +37,11 @@
   box-sizing: border-box;
   color: white;
 }
+.logo-wrapper {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 1rem;
+}
 
 h2 {
   margin-bottom: 20px;

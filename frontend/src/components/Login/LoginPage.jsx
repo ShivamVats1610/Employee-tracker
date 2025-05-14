@@ -70,7 +70,9 @@ const LoginForm = ({ onLogin }) => {
       </div>
       <div className="form-container">
         <div className="login-box">
-          <img class="justify-center" src="assets/images/logo.png" alt="Employee Tracker Logo" className="logo" />
+          <div className="logo-wrapper">
+        <img src="/assets/images/logo.png" alt="Employee Tracker Logo" className="logo" />
+      </div>
           <h2>{isRegister ? 'Register' : 'Login'}</h2>
           <form onSubmit={handleSubmit}>
             <div className="input-group">
