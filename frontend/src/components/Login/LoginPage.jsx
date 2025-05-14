@@ -1,37 +1,31 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { SnackbarProvider, useSnackbar } from 'notistack';
+
 import './LoginPage.css';
 
-const LoginForm = ({ onLogin }) => {
+const LoginPage = ({ onLogin }) => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [role, setRole] = useState('hr');
   const [isRegister, setIsRegister] = useState(false);
+  const [message, setMessage] = useState('');
 
-  const navigate = useNavigate();
-  const { enqueueSnackbar } = useSnackbar();
+  const navigate = useNavigate(); // ✅ for redirecting after login
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    const capitalizedRole = role.charAt(0).toUpperCase() + role.slice(1);
-
-    // ✳️ Basic field validation
-    if (!username.trim() || !password.trim() || (isRegister && !confirmPassword.trim())) {
-      enqueueSnackbar('All fields are required!', { variant: 'error' });
-      return;
-    }
-
-    if (isRegister && password !== confirmPassword) {
-      enqueueSnackbar('Passwords do not match!', { variant: 'error' });
-      return;
-    }
-
     const url = isRegister
       ? 'http://localhost:8082/api/auth/register'
       : 'http://localhost:8082/api/auth/login';
+
+    if (isRegister && password !== confirmPassword) {
+      setMessage('Passwords do not match!');
+      return;
+    }
+
+    const capitalizedRole = role.charAt(0).toUpperCase() + role.slice(1);
 
     try {
       const response = await fetch(url, {
@@ -45,21 +39,20 @@ const LoginForm = ({ onLogin }) => {
       const data = await response.json();
 
       if (!response.ok) {
-        enqueueSnackbar(data.message || 'Something went wrong', { variant: 'error' });
+        setMessage(data.message || 'Something went wrong');
       } else {
-        enqueueSnackbar(data.message, { variant: 'success' });
-
+        setMessage(data.message);
         if (!isRegister) {
-          localStorage.setItem('role', capitalizedRole);
-          onLogin(capitalizedRole);
-          navigate('/dashboard');
+          localStorage.setItem('role', capitalizedRole); // ✅ store role
+          onLogin(capitalizedRole); // ✅ simulate login
+          navigate('/dashboard'); // ✅ redirect
         } else {
-          setIsRegister(false);
+          setIsRegister(false); // return to login
         }
       }
     } catch (error) {
-      enqueueSnackbar('Server error. Please try again later.', { variant: 'error' });
-      console.error(error);
+      setMessage('Server error. Please try again later.');
+      console.error('Error:', error);
     }
   };
 
@@ -77,6 +70,7 @@ const LoginForm = ({ onLogin }) => {
               <input
                 type="text"
                 id="username"
+                placeholder="Enter your username"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
                 required
@@ -88,6 +82,7 @@ const LoginForm = ({ onLogin }) => {
               <input
                 type="password"
                 id="password"
+                placeholder="Enter your password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
@@ -100,6 +95,7 @@ const LoginForm = ({ onLogin }) => {
                 <input
                   type="password"
                   id="confirmPassword"
+                  placeholder="Re-enter your password"
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   required
@@ -109,7 +105,12 @@ const LoginForm = ({ onLogin }) => {
 
             <div className="input-group">
               <label htmlFor="role">Select Role</label>
-              <select id="role" value={role} onChange={(e) => setRole(e.target.value)} required>
+              <select
+                id="role"
+                value={role}
+                onChange={(e) => setRole(e.target.value)}
+                required
+              >
                 <option value="hr">HR</option>
                 <option value="admin">Admin</option>
                 <option value="employee">Employee</option>
@@ -120,6 +121,8 @@ const LoginForm = ({ onLogin }) => {
               {isRegister ? 'Register' : 'Login'}
             </button>
           </form>
+
+          {message && <p className="response-message">{message}</p>}
 
           <div className="toggle-text">
             {isRegister ? 'Already have an account?' : "Don't have an account?"}{' '}
@@ -132,16 +135,5 @@ const LoginForm = ({ onLogin }) => {
     </div>
   );
 };
-
-// 👉 Wrap LoginForm with SnackbarProvider
-const LoginPage = (props) => (
-  <SnackbarProvider
-    maxSnack={3}
-    anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
-    autoHideDuration={3000}
-  >
-    <LoginForm {...props} />
-  </SnackbarProvider>
-);
 
 export default LoginPage;
