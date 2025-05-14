@@ -1,23 +1,25 @@
 import React from 'react';
-import { Link, useNavigate } from 'react-router-dom'; // ✅ Added Link import
+import { Link, useNavigate } from 'react-router-dom';
 import './Header.css';
 
 const Header = ({ role }) => {
   const navigate = useNavigate();
 
-  if (!role) return null;
-
   const handleLogout = () => {
     localStorage.removeItem('role');
     navigate('/');
-    window.location.reload(); // reload to reset role in App.js
+    window.location.reload(); // Ensure App reinitializes role
   };
+
+  // Show nothing if role is not available yet (prevents flicker)
+  if (!role) return null;
 
   return (
     <header className="header">
-      <h1 className="logo">Employee Tracker</h1>
+      <img src="assets/images/logo.png" alt="Employee Tracker Logo" className="logo" />
+
       <nav className="nav-links">
-        {/* Conditional links by role */}
+        {/* Links for Admin */}
         {role === 'admin' && (
           <>
             <Link to="/dashboard">Dashboard</Link>
@@ -27,6 +29,8 @@ const Header = ({ role }) => {
             <Link to="/calendar">Leave Calendar</Link>
           </>
         )}
+
+        {/* Links for HR */}
         {role === 'hr' && (
           <>
             <Link to="/dashboard">Dashboard</Link>
@@ -35,6 +39,8 @@ const Header = ({ role }) => {
             <Link to="/reports">Reports</Link>
           </>
         )}
+
+        {/* Links for Employee */}
         {role === 'employee' && (
           <>
             <Link to="/dashboard">Dashboard</Link>
@@ -44,10 +50,11 @@ const Header = ({ role }) => {
             <Link to="/calendar">My Calendar</Link>
           </>
         )}
-        <span onClick={handleLogout} className="logout-button">
-  Logout
-</span>
       </nav>
+
+      <span className="logout-button" onClick={handleLogout}>
+        Logout
+      </span>
     </header>
   );
 };

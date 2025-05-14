@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 
 import LoginPage from './components/Login/LoginPage.jsx';
@@ -13,9 +13,18 @@ const App = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [userRole, setUserRole] = useState(null);
 
+  useEffect(() => {
+    const storedRole = localStorage.getItem('role');
+    if (storedRole) {
+      setIsAuthenticated(true);
+      setUserRole(storedRole);
+    }
+  }, []);
+
   const handleLogin = (role) => {
-    setIsAuthenticated(true);
+    localStorage.setItem('role', role);
     setUserRole(role);
+    setIsAuthenticated(true);
   };
 
   return (
@@ -23,27 +32,73 @@ const App = () => {
       <Routes>
         <Route
           path="/"
-          element={isAuthenticated ? <Navigate to="/dashboard" /> : <LoginPage onLogin={handleLogin} />}
+          element={
+            isAuthenticated ? (
+              <Navigate to="/dashboard" replace />
+            ) : (
+              <LoginPage onLogin={handleLogin} />
+            )
+          }
         />
         <Route
           path="/dashboard"
-          element={isAuthenticated ? <DashboardLayout><Dashboard /></DashboardLayout> : <Navigate to="/" />}
+          element={
+            isAuthenticated ? (
+              <DashboardLayout role={userRole}>
+                <Dashboard />
+              </DashboardLayout>
+            ) : (
+              <Navigate to="/" replace />
+            )
+          }
         />
         <Route
           path="/employees"
-          element={isAuthenticated ? <DashboardLayout><Employees /></DashboardLayout> : <Navigate to="/" />}
+          element={
+            isAuthenticated ? (
+              <DashboardLayout role={userRole}>
+                <Employees />
+              </DashboardLayout>
+            ) : (
+              <Navigate to="/" replace />
+            )
+          }
         />
         <Route
           path="/leaves"
-          element={isAuthenticated ? <DashboardLayout><Leaves /></DashboardLayout> : <Navigate to="/" />}
+          element={
+            isAuthenticated ? (
+              <DashboardLayout role={userRole}>
+                <Leaves />
+              </DashboardLayout>
+            ) : (
+              <Navigate to="/" replace />
+            )
+          }
         />
         <Route
           path="/reports"
-          element={isAuthenticated ? <DashboardLayout><Reports /></DashboardLayout> : <Navigate to="/" />}
+          element={
+            isAuthenticated ? (
+              <DashboardLayout role={userRole}>
+                <Reports />
+              </DashboardLayout>
+            ) : (
+              <Navigate to="/" replace />
+            )
+          }
         />
         <Route
           path="/calendar"
-          element={isAuthenticated ? <DashboardLayout><Calendar /></DashboardLayout> : <Navigate to="/" />}
+          element={
+            isAuthenticated ? (
+              <DashboardLayout role={userRole}>
+                <Calendar />
+              </DashboardLayout>
+            ) : (
+              <Navigate to="/" replace />
+            )
+          }
         />
       </Routes>
     </Router>

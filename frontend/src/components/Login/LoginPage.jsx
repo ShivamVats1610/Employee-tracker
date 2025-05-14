@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-
 import './LoginPage.css';
 
 const LoginPage = ({ onLogin }) => {
@@ -45,7 +44,7 @@ const LoginPage = ({ onLogin }) => {
         if (!isRegister) {
           localStorage.setItem('role', capitalizedRole); // ✅ store role
           onLogin(capitalizedRole); // ✅ simulate login
-          navigate('/dashboard'); // ✅ redirect
+          navigate('/dashboard'); // ✅ redirect to dashboard after successful login
         } else {
           setIsRegister(false); // return to login
         }
@@ -63,6 +62,7 @@ const LoginPage = ({ onLogin }) => {
       </div>
       <div className="form-container">
         <div className="login-box">
+        <img class="justify-center" src="assets/images/logo.png" alt="Employee Tracker Logo" className="logo" />
           <h2>{isRegister ? 'Register' : 'Login'}</h2>
           <form onSubmit={handleSubmit}>
             <div className="input-group">
