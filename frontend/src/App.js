@@ -9,6 +9,7 @@ import Leaves from './pages/Leaves';
 import Reports from './pages/Reports';
 import Calendar from './pages/Calendar';
 
+
 const App = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [userRole, setUserRole] = useState(null);
