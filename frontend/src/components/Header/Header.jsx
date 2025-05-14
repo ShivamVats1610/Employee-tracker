@@ -1,14 +1,23 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom'; // ✅ Added Link import
 import './Header.css';
 
 const Header = ({ role }) => {
+  const navigate = useNavigate();
+
   if (!role) return null;
+
+  const handleLogout = () => {
+    localStorage.removeItem('role');
+    navigate('/');
+    window.location.reload(); // reload to reset role in App.js
+  };
 
   return (
     <header className="header">
       <h1 className="logo">Employee Tracker</h1>
       <nav className="nav-links">
+        {/* Conditional links by role */}
         {role === 'admin' && (
           <>
             <Link to="/dashboard">Dashboard</Link>
@@ -35,7 +44,9 @@ const Header = ({ role }) => {
             <Link to="/calendar">My Calendar</Link>
           </>
         )}
-        <Link to="/logout">Logout</Link>
+        <span onClick={handleLogout} className="logout-button">
+  Logout
+</span>
       </nav>
     </header>
   );
