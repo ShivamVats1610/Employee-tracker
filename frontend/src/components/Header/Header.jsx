@@ -20,7 +20,7 @@ const Header = ({ role }) => {
 
       <nav className="nav-links">
         {/* Links for Admin */}
-        {role === 'admin' && (
+        {role === 'Admin' && (
           <>
             <Link to="/dashboard">Dashboard</Link>
             <Link to="/employees">Manage Employees</Link>
@@ -31,7 +31,7 @@ const Header = ({ role }) => {
         )}
 
         {/* Links for HR */}
-        {role === 'hr' && (
+        {role === 'Hr' && (
           <>
             <Link to="/dashboard">Dashboard</Link>
             <Link to="/attendance">Attendance</Link>
@@ -41,7 +41,7 @@ const Header = ({ role }) => {
         )}
 
         {/* Links for Employee */}
-        {role === 'employee' && (
+        {role === 'Employee' && (
           <>
             <Link to="/dashboard">Dashboard</Link>
             <Link to="/checkin">Check In/Out</Link>
