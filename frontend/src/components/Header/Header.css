@@ -1,7 +1,7 @@
 .header {
   background-color: #000;
   color: #fff;
-  padding: 1rem 2rem;
+  padding: 1.5rem 2.5rem;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -12,6 +12,7 @@
   width: auto;
   object-fit: contain;
 }
+
 .nav-links {
   display: flex;
   align-items: center;
@@ -22,18 +23,26 @@
   text-decoration: none;
   color: white;
   font-weight: 500;
+  font-size: 18px;
+  position: relative; /* For hover effect */
+}
+
+.nav-links a::before {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 0%;
+  height: 2px;
+  background-color: orangered;
+  transition: width 0.3s;
 }
 
 .nav-links a:hover {
-  color: orange;
+  color: orangered;
 }
 
-.logout-button {
-  cursor: pointer;
-  color: white;
-  margin-left: 1rem;
+.nav-links a:hover::before {
+  width: 100%; /* Full underline width on hover */
 }
 
-.logout-button:hover {
-  text-decoration: underline;
-}

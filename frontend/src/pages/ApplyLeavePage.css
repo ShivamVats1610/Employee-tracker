@@ -1,0 +1,35 @@
+.leave-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 90vh;
+  padding: 20px;
+  background-color: #121212;
+  color: white;
+}
+
+.leave-form {
+  display: flex;
+  flex-direction: column;
+  width: 300px;
+  gap: 15px;
+}
+
+.leave-form input {
+  padding: 10px;
+  font-size: 16px;
+}
+
+.leave-form button {
+  padding: 10px;
+  background-color: orangered;
+  color: white;
+  font-size: 16px;
+  border: none;
+  cursor: pointer;
+}
+
+.leave-form button:hover {
+  background-color: orangered;
+}

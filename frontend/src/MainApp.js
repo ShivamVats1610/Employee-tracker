@@ -8,6 +8,8 @@ import Employees from './pages/Employees';
 import Leaves from './pages/Leaves';
 import Reports from './pages/Reports';
 import Calendar from './pages/Calendar';
+import CheckInOutPage from './pages/CheckInOutPage.jsx';
+import ApplyLeavePage from './pages/ApplyLeavePage';
 
 const MainApp = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -51,6 +53,31 @@ const MainApp = () => {
           )
         }
       />
+      <Route
+  path="/check-in-out"
+  element={
+    isAuthenticated ? (
+      <DashboardLayout role={userRole}>
+        <CheckInOutPage />
+      </DashboardLayout>
+    ) : (
+      <Navigate to="/" replace />
+    )
+  }
+/>
+<Route
+  path="/apply-leave"
+  element={
+    isAuthenticated ? (
+      <DashboardLayout role={userRole}>
+        <ApplyLeavePage />
+      </DashboardLayout>
+    ) : (
+      <Navigate to="/" replace />
+    )
+  }
+/>
+
       <Route
         path="/employees"
         element={

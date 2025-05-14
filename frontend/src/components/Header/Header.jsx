@@ -44,17 +44,16 @@ const Header = ({ role }) => {
         {role === 'Employee' && (
           <>
             <Link to="/dashboard">Dashboard</Link>
-            <Link to="/checkin">Check In/Out</Link>
-            <Link to="/leave-apply">Apply Leave</Link>
+            <Link to="/check-in-out">Check In/Out</Link>
+            <Link to="/apply-leave">Apply Leave</Link>
             <Link to="/work-report">Daily Report</Link>
             <Link to="/calendar">My Calendar</Link>
           </>
         )}
-      </nav>
 
-      <span className="logout-button" onClick={handleLogout}>
-        Logout
-      </span>
+        <Link to="/logout" onClick={handleLogout}>Logout</Link>
+      </nav>
+      
     </header>
   );
 };

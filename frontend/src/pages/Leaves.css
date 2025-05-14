@@ -1,0 +1,70 @@
+.hr-leave-container {
+  max-width: 900px;
+  margin: 30px auto;
+  padding: 20px;
+  border-radius: 8px;
+  background-color: #f9f9f9;
+}
+
+h2 {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.leave-table {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.table-header, .table-row {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 10px;
+  padding: 10px;
+  background-color: #e8e8e8;
+  border-radius: 8px;
+}
+
+.table-header {
+  font-weight: bold;
+  background-color: orangered;
+  color: white;
+}
+
+.table-row {
+  background-color: #ffffff;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.column {
+  padding: 8px;
+  text-align: center;
+}
+
+.actions {
+  display: flex;
+  justify-content: space-around;
+}
+
+button {
+  background-color: orangered;
+  color: white;
+  border: none;
+  padding: 8px 12px;
+  margin: 2px;
+  cursor: pointer;
+  border-radius: 5px;
+}
+
+button:hover {
+  opacity: 0.9;
+}
+
+button:nth-child(2) {
+  background-color: #f44336;
+}
+
+button:nth-child(2):hover {
+  opacity: 0.9;
+}
