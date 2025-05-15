@@ -29,6 +29,8 @@ app.post('/api/checkout', (req, res) => {
   res.send({ message: 'Check-out successful!' });
 });
 
+
+
 // Start Server
 app.listen(8082,()=>{
   console.log('server is running on port 8082');

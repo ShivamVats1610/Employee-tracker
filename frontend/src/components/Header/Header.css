@@ -5,6 +5,8 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
+  position: relative;
+  z-index: 1000;
 }
 
 .logo {
@@ -13,6 +15,16 @@
   object-fit: contain;
 }
 
+/* Hamburger Button */
+.hamburger {
+  font-size: 2rem;
+  color: white;
+  cursor: pointer;
+  display: none;
+  z-index: 1100;
+}
+
+/* Nav Links */
 .nav-links {
   display: flex;
   align-items: center;
@@ -24,7 +36,7 @@
   color: white;
   font-weight: 500;
   font-size: 18px;
-  position: relative; /* For hover effect */
+  position: relative;
 }
 
 .nav-links a::before {
@@ -43,6 +55,44 @@
 }
 
 .nav-links a:hover::before {
-  width: 100%; /* Full underline width on hover */
+  width: 100%;
 }
 
+/* Mobile Responsive Styles */
+@media (max-width: 768px) {
+  .hamburger {
+    display: block;
+  }
+
+  .nav-links {
+    position: fixed;
+    top: 0;
+    right: -300px;
+    height: 100%;
+    width: 250px;
+    background-color: #111;
+    flex-direction: column;
+    padding: 2rem 1.5rem;
+    transition: right 0.3s ease-in-out;
+    z-index: 1050;
+  }
+
+  .nav-links.open {
+    right: 0;
+  }
+
+  .nav-links a {
+    margin: 1rem 0;
+    font-size: 20px;
+  }
+
+  .overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100vh;
+    width: 100vw;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 1040;
+  }
+}

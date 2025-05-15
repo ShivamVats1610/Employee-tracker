@@ -1,15 +1,18 @@
+// MainApp.js
 import React, { useEffect, useState } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 
 import LoginPage from './components/Login/LoginPage.jsx';
 import DashboardLayout from './Layouts/DashboardLayout.jsx';
-import Dashboard from './pages/Dashboard';
 import Employees from './pages/Employees';
 import Leaves from './pages/Leaves';
-import Reports from './pages/Reports';
-import Calendar from './pages/Calendar';
+import Reports from './pages/DailyReportPage';
+import Calendar from './pages/CalendarPage.jsx';
 import CheckInOutPage from './pages/CheckInOutPage.jsx';
 import ApplyLeavePage from './pages/ApplyLeavePage';
+import EmployeeDashboard from './pages/EmployeeDashboard';
+import AdminDashboard from './pages/AdminDashboard.jsx';
+import HRDashboard from './pages/HrDashboard.jsx';
 
 const MainApp = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -19,13 +22,14 @@ const MainApp = () => {
     const storedRole = localStorage.getItem('role');
     if (storedRole) {
       setIsAuthenticated(true);
-      setUserRole(storedRole);
+      setUserRole(storedRole.toLowerCase());
     }
   }, []);
 
   const handleLogin = (role) => {
-    localStorage.setItem('role', role);
-    setUserRole(role);
+    const normalizedRole = role.toLowerCase();
+    localStorage.setItem('role', normalizedRole);
+    setUserRole(normalizedRole);
     setIsAuthenticated(true);
   };
 
@@ -35,48 +39,85 @@ const MainApp = () => {
         path="/"
         element={
           isAuthenticated ? (
-            <Navigate to="/dashboard" replace />
+            userRole === 'admin' ? (
+              <Navigate to="/admin-dashboard" replace />
+            ) : userRole === 'hr' ? (
+              <Navigate to="/hr-dashboard" replace />
+            ) : userRole === 'employee' ? (
+              <Navigate to="/employee-dashboard" replace />
+            ) : (
+              <Navigate to="/unauthorized" replace />
+            )
           ) : (
             <LoginPage onLogin={handleLogin} />
           )
         }
       />
+
       <Route
-        path="/dashboard"
+        path="/admin-dashboard"
         element={
-          isAuthenticated ? (
-            <DashboardLayout role={userRole}>
-              <Dashboard />
+          isAuthenticated && userRole === 'admin' ? (
+            <DashboardLayout role="admin">
+              <AdminDashboard />
             </DashboardLayout>
           ) : (
             <Navigate to="/" replace />
           )
         }
       />
+
       <Route
-  path="/check-in-out"
-  element={
-    isAuthenticated ? (
-      <DashboardLayout role={userRole}>
-        <CheckInOutPage />
-      </DashboardLayout>
-    ) : (
-      <Navigate to="/" replace />
-    )
-  }
-/>
-<Route
-  path="/apply-leave"
-  element={
-    isAuthenticated ? (
-      <DashboardLayout role={userRole}>
-        <ApplyLeavePage />
-      </DashboardLayout>
-    ) : (
-      <Navigate to="/" replace />
-    )
-  }
-/>
+        path="/hr-dashboard"
+        element={
+          isAuthenticated && userRole === 'hr' ? (
+            <DashboardLayout role="hr">
+              <HRDashboard />
+            </DashboardLayout>
+          ) : (
+            <Navigate to="/" replace />
+          )
+        }
+      />
+
+      <Route
+        path="/employee-dashboard"
+        element={
+          isAuthenticated && userRole === 'employee' ? (
+            <DashboardLayout role="employee">
+              <EmployeeDashboard />
+            </DashboardLayout>
+          ) : (
+            <Navigate to="/" replace />
+          )
+        }
+      />
+
+      <Route
+        path="/check-in-out"
+        element={
+          isAuthenticated ? (
+            <DashboardLayout role={userRole}>
+              <CheckInOutPage />
+            </DashboardLayout>
+          ) : (
+            <Navigate to="/" replace />
+          )
+        }
+      />
+
+      <Route
+        path="/apply-leave"
+        element={
+          isAuthenticated ? (
+            <DashboardLayout role={userRole}>
+              <ApplyLeavePage />
+            </DashboardLayout>
+          ) : (
+            <Navigate to="/" replace />
+          )
+        }
+      />
 
       <Route
         path="/employees"
@@ -90,6 +131,7 @@ const MainApp = () => {
           )
         }
       />
+
       <Route
         path="/leaves"
         element={
@@ -102,8 +144,9 @@ const MainApp = () => {
           )
         }
       />
+
       <Route
-        path="/reports"
+        path="/daily-report"
         element={
           isAuthenticated ? (
             <DashboardLayout role={userRole}>
@@ -114,6 +157,7 @@ const MainApp = () => {
           )
         }
       />
+
       <Route
         path="/calendar"
         element={
@@ -126,6 +170,8 @@ const MainApp = () => {
           )
         }
       />
+
+      <Route path="/unauthorized" element={<h2>Unauthorized Access</h2>} />
     </Routes>
   );
 };

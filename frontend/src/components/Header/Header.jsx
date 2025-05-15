@@ -1,59 +1,66 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import './Header.css';
 
 const Header = ({ role }) => {
   const navigate = useNavigate();
+  const [isOpen, setIsOpen] = useState(false);
 
   const handleLogout = () => {
     localStorage.removeItem('role');
     navigate('/');
-    window.location.reload(); // Ensure App reinitializes role
+    window.location.reload();
   };
 
-  // Show nothing if role is not available yet (prevents flicker)
+  const toggleMenu = () => {
+    setIsOpen(!isOpen);
+  };
+
   if (!role) return null;
+  const normalizedRole = role.toLowerCase();
 
   return (
     <header className="header">
       <img src="assets/images/logo.png" alt="Employee Tracker Logo" className="logo" />
 
-      <nav className="nav-links">
-        {/* Links for Admin */}
-        {role === 'Admin' && (
+      <div className="hamburger" onClick={toggleMenu}>
+        {isOpen ? '✖' : '☰'}
+      </div>
+
+      <nav className={`nav-links ${isOpen ? 'open' : ''}`}>
+        {normalizedRole === 'admin' && (
           <>
-            <Link to="/dashboard">Dashboard</Link>
-            <Link to="/employees">Manage Employees</Link>
-            <Link to="/leaves">Leave Requests</Link>
-            <Link to="/reports">Reports</Link>
-            <Link to="/calendar">Leave Calendar</Link>
+            <Link to="/admin-dashboard" onClick={toggleMenu}>Dashboard</Link>
+            <Link to="/employees" onClick={toggleMenu}>Manage Employees</Link>
+            <Link to="/leaves" onClick={toggleMenu}>Leave Requests</Link>
+            <Link to="/daily-report" onClick={toggleMenu}>Reports</Link>
+            <Link to="/calendar" onClick={toggleMenu}>Leave Calendar</Link>
           </>
         )}
 
-        {/* Links for HR */}
-        {role === 'Hr' && (
+        {normalizedRole === 'hr' && (
           <>
-            <Link to="/dashboard">Dashboard</Link>
-            <Link to="/attendance">Attendance</Link>
-            <Link to="/leaves">Manage Leaves</Link>
-            <Link to="/reports">Reports</Link>
+            <Link to="/hr-dashboard" onClick={toggleMenu}>Dashboard</Link>
+            <Link to="/leaves" onClick={toggleMenu}>Manage Leaves</Link>
+            <Link to="/employees" onClick={toggleMenu}>Manage Employees</Link>
+            <Link to="/daily-report" onClick={toggleMenu}>Reports</Link>
           </>
         )}
 
-        {/* Links for Employee */}
-        {role === 'Employee' && (
+        {normalizedRole === 'employee' && (
           <>
-            <Link to="/dashboard">Dashboard</Link>
-            <Link to="/check-in-out">Check In/Out</Link>
-            <Link to="/apply-leave">Apply Leave</Link>
-            <Link to="/work-report">Daily Report</Link>
-            <Link to="/calendar">My Calendar</Link>
+            <Link to="/employee-dashboard" onClick={toggleMenu}>Dashboard</Link>
+            <Link to="/check-in-out" onClick={toggleMenu}>Check In/Out</Link>
+            <Link to="/apply-leave" onClick={toggleMenu}>Apply Leave</Link>
+            <Link to="/daily-report" onClick={toggleMenu}>Daily Report</Link>
+            <Link to="/calendar" onClick={toggleMenu}>My Calendar</Link>
           </>
         )}
 
-        <Link to="/logout" onClick={handleLogout}>Logout</Link>
+        <Link to="/" onClick={() => { handleLogout(); toggleMenu(); }}>Logout</Link>
       </nav>
-      
+
+      {isOpen && <div className="overlay" onClick={toggleMenu}></div>}
     </header>
   );
 };

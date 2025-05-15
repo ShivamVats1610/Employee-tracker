@@ -9,7 +9,7 @@ const CheckInOutPage = () => {
 
   const officeCoordinates = {
     lat: 28.7041,
-    lon: 77.1025
+    lon: 77.1025,
   };
 
   useEffect(() => {
@@ -44,14 +44,15 @@ const CheckInOutPage = () => {
   }, []);
 
   const calculateDistance = (lat1, lon1, lat2, lon2) => {
-    const R = 6371;
-    const dLat = (lat2 - lat1) * (Math.PI / 180);
-    const dLon = (lon2 - lon1) * (Math.PI / 180);
+    const R = 6371; // km
+    const dLat = ((lat2 - lat1) * Math.PI) / 180;
+    const dLon = ((lon2 - lon1) * Math.PI) / 180;
     const a =
       Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-      Math.cos(lat1 * (Math.PI / 180)) *
-        Math.cos(lat2 * (Math.PI / 180)) *
-        Math.sin(dLon / 2) * Math.sin(dLon / 2);
+      Math.cos((lat1 * Math.PI) / 180) *
+        Math.cos((lat2 * Math.PI) / 180) *
+        Math.sin(dLon / 2) *
+        Math.sin(dLon / 2);
     const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
     return R * c;
   };
@@ -103,20 +104,117 @@ const CheckInOutPage = () => {
   };
 
   return (
-    <div style={{ textAlign: 'center', padding: '40px' }}>
-      <h1>Employee Check-in/Check-out</h1>
-      <p style={{ fontWeight: 'bold', color: isInOffice ? 'green' : 'red' }}>{locationStatus}</p>
+    <>
+      <div className="background-checkin"></div>
+      <div className="overlay"></div>
 
-      <div style={{ marginTop: '20px' }}>
-        <button onClick={handleCheckIn} disabled={checkInStatus}>
-          ✅ Check In
-        </button>
-        &nbsp;&nbsp;
-        <button onClick={handleCheckOut} disabled={checkOutStatus}>
-          🔁 Check Out
-        </button>
+      <div className="checkin-container">
+        <h1 class="text-white">Employee Check-in / Check-out</h1>
+        <p className={`location-status ${isInOffice ? 'in-office' : 'out-office'}`}>
+          {locationStatus}
+        </p>
+
+        <div className="buttons">
+          <button onClick={handleCheckIn} disabled={checkInStatus}>
+            ✅ Check In
+          </button>
+          <button onClick={handleCheckOut} disabled={checkOutStatus}>
+            🔁 Check Out
+          </button>
+        </div>
       </div>
-    </div>
+
+      <style jsx>{`
+        .background-checkin {
+          position: fixed;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
+          background-image: url('/assets/images/bgcheckin.jpg'); /* Change this */
+          background-size: cover;
+          background-position: center;
+          z-index: -3;
+        }
+
+        .overlay {
+          position: fixed;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
+          background: rgba(0, 0, 0, 0.45);
+          z-index: -2;
+        }
+
+        .checkin-container {
+          max-width: 420px;
+          margin: 60px auto;
+          background: rgba(30, 30, 30, 0.17);
+          padding: 40px 30px;
+          border-radius: 12px;
+          box-shadow: 0 8px 24px rgba(0, 0, 0, 0.7);
+          color: #fff;
+          font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+          text-align: center;
+        }
+
+        h1 {
+          margin-bottom: 24px;
+          font-weight: 700;
+          font-size: 1.8rem;
+          letter-spacing: 1.3px;
+        }
+
+        .location-status {
+          font-weight: 600;
+          font-size: 1.1rem;
+          margin-bottom: 32px;
+          user-select: none;
+        }
+
+        .in-office {
+          color: #4caf50; /* green */
+        }
+
+        .out-office {
+          color: #f44336; /* red */
+        }
+
+        .buttons {
+          display: flex;
+          justify-content: center;
+          gap: 24px;
+        }
+
+        button {
+          background: linear-gradient(90deg, #ff5722, #ff7043);
+          border: none;
+          border-radius: 30px;
+          color: white;
+          font-weight: 600;
+          font-size: 1.1rem;
+          padding: 14px 36px;
+          cursor: pointer;
+          box-shadow: 0 4px 12px rgb(255 87 34 / 0.5);
+          transition: background 0.3s ease;
+          min-width: 130px;
+          user-select: none;
+        }
+
+        button:disabled {
+          background: #777;
+          cursor: not-allowed;
+          box-shadow: none;
+          color: #ccc;
+        }
+
+        button:not(:disabled):hover {
+          background: linear-gradient(90deg, #ff7043, #ff5722);
+          box-shadow: 0 6px 18px rgb(255 112 67 / 0.7);
+        }
+      `}</style>
+    </>
   );
 };
 

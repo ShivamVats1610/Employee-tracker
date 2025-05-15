@@ -1,35 +1,199 @@
 .leave-container {
   display: flex;
-  flex-direction: column;
-  align-items: center;
   justify-content: center;
-  min-height: 90vh;
-  padding: 20px;
-  background-color: #121212;
+  align-items: flex-start;
+  gap: 50px;
+  padding: 50px;
+  min-height: 100vh;
+  background-color: rgba(0, 0, 0, 0.5); /* Semi-transparent overlay */
+  backdrop-filter: blur(4px); /* Optional: adds subtle blur */
   color: white;
+  font-family: 'Segoe UI', sans-serif;
+  z-index: 1;
+  overflow: hidden;
+}
+
+.background-leave {
+  z-index: -2;
+  position: fixed;
+  top: 0; left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Overlay layer */
+.background-leave::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.537); /* Light black overlay */
+  z-index: -1;
+}
+
+
+.glass {
+  background: rgba(30, 30, 30, 0);
+  border-radius: 20px;
+  padding: 30px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.form-card,
+.summary-card {
+  width: 450px;
+}
+
+.form-card h2,
+.summary-card h3 {
+  text-align: center;
+  margin-bottom: 20px;
 }
 
 .leave-form {
   display: flex;
   flex-direction: column;
-  width: 300px;
   gap: 15px;
 }
 
-.leave-form input {
-  padding: 10px;
+.leave-form input,
+.leave-form textarea {
+  padding: 12px;
+  border: none;
+  border-radius: 10px;
   font-size: 16px;
+  background-color: #2a2a2a;
+  color: white;
+}
+
+.leave-form input::placeholder,
+.leave-form textarea::placeholder {
+  color: #bbb;
+}
+
+.leave-form input[type='file'] {
+  background-color: transparent;
+  padding: 5px;
+  color: #ccc;
+}
+.file-upload {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.file-name {
+  font-style: italic;
+  color: #333;
 }
 
 .leave-form button {
-  padding: 10px;
-  background-color: orangered;
+  padding: 14px;
+  background: linear-gradient(135deg, #ff4500, #ff6347);
   color: white;
   font-size: 16px;
   border: none;
+  border-radius: 12px;
   cursor: pointer;
+  transition: background 0.3s;
 }
 
 .leave-form button:hover {
-  background-color: orangered;
+  background: linear-gradient(135deg, #ff6347, #ff4500);
+}
+
+/* ---- LEAVE REQUEST TABLE ---- */
+.leave-info {
+  margin-top: 20px;
+}
+
+.info-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.leave-table {
+  width: 100%;
+  border-collapse: collapse;
+  background-color: #2a2a2a;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.leave-table th,
+.leave-table td {
+  padding: 12px;
+  text-align: left;
+  border-bottom: 1px solid #444;
+}
+
+.leave-table th {
+  background-color: #1e1e1e;
+  color: #ff6347;
+  font-weight: bold;
+}
+
+.leave-table tr:hover {
+  background-color: #383838;
+}
+
+.leave-table td {
+  color: #ddd;
+}
+
+.leave-table .pending {
+  color: orange;
+  font-weight: bold;
+}
+
+.leave-table .approved {
+  color: lightgreen;
+  font-weight: bold;
+}
+
+.leave-table .rejected {
+  color: red;
+  font-weight: bold;
+}
+/* Mobile Responsive */
+@media (max-width: 768px) {
+  .leave-container {
+    flex-direction: column;
+    align-items: center;
+    padding: 20px;
+    gap: 30px;
+    min-height: auto; /* adjust height for mobile */
+  }
+
+  .form-card,
+  .summary-card {
+    width: 100%;
+    max-width: 450px;
+    background: rgba(30, 30, 30, 0.4); /* subtle glass effect */
+    border-radius: 20px;
+    padding: 20px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  /* Make sure form-card is above summary-card */
+  .leave-container > .form-card {
+    order: 1;
+    margin-bottom: 20px;
+  }
+
+  .leave-container > .summary-card {
+    order: 2;
+  }
 }
