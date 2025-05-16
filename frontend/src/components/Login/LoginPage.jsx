@@ -51,6 +51,7 @@ const LoginForm = ({ onLogin }) => {
 
         if (!isRegister) {
           localStorage.setItem('role', capitalizedRole);
+          localStorage.setItem('username', username); 
           onLogin(capitalizedRole);
           navigate('/dashboard');
         } else {

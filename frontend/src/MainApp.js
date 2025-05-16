@@ -13,6 +13,8 @@ import ApplyLeavePage from './pages/ApplyLeavePage';
 import EmployeeDashboard from './pages/EmployeeDashboard';
 import AdminDashboard from './pages/AdminDashboard.jsx';
 import HRDashboard from './pages/HrDashboard.jsx';
+import EditProfile from './components/EditProfile/EditProfile';
+
 
 const MainApp = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -92,7 +94,16 @@ const MainApp = () => {
           )
         }
       />
-
+      <Route
+  path="/edit-profile"
+  element={
+    isAuthenticated ? (
+      <EditProfile userRole={userRole} />
+    ) : (
+      <Navigate to="/" replace />
+    )
+  }
+/>
       <Route
         path="/check-in-out"
         element={

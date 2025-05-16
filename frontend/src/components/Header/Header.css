@@ -96,3 +96,63 @@
     z-index: 1040;
   }
 }
+.profile-dropdown {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  margin-left: 1rem;
+}
+
+.profile-img {
+  width: 35px;
+  height: 35px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+.profile-name {
+  font-weight: 600;
+  font-size: 24px;
+  color: orangered;
+}
+
+.dropdown-menu {
+  position: absolute;
+  right: 0;
+  top: 50px;
+  background: #2c2c2c;
+  color: white;
+  border-radius: 8px;
+  width: 180px;
+  padding: 10px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+  z-index: 10;
+}
+
+.profile-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #444;
+}
+
+.profile-info img {
+  width: 35px;
+  height: 35px;
+  border-radius: 50%;
+}
+
+.dropdown-menu a,
+.logout-btn {
+  display: block;
+  padding: 10px 0;
+  color: white;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.dropdown-menu a:hover,
+.logout-btn:hover {
+  color: orangered;
+}
