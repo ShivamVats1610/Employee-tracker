@@ -1,68 +1,98 @@
-// controllers/authController.js
-const User = require('../models/User.js');
-const bcrypt = require('bcryptjs');
+    // controllers/authController.js
+    const User = require('../models/User.js');
+    const bcrypt = require('bcryptjs');
 
-exports.registerUser = async (req, res) => {
-  let { username, password, role } = req.body;
-
-  try {
-    const existingUser = await User.findOne({ username });
-    if (existingUser)
-      return res.status(400).json({ message: 'User already exists' });
-
-    const hashedPassword = await bcrypt.hash(password, 10);
-
-    // Normalize role
-    const allowedRoles = ['HR', 'Admin', 'Employee'];
-
-    // Convert input role to match enum values
-    role = role.trim().toLowerCase(); // "hr"
-    if (role === 'hr') role = 'HR';
-    else if (role === 'admin') role = 'Admin';
-    else if (role === 'employee') role = 'Employee';
-    else return res.status(400).json({ message: 'Invalid role provided' });
-
-    const newUser = new User({
-      username,
-      password: hashedPassword,
-      role
-    });
-
-    await newUser.save();
-    res.status(201).json({ message: 'User registered successfully' });
-  } catch (error) {
-    res.status(500).json({ message: 'Server error', error });
-  }
-};
-
-
-exports.loginUser = async (req, res) => {
+    exports.registerUser = async (req, res) => {
     let { username, password, role } = req.body;
 
     try {
-        const user = await User.findOne({ username });
-        if (!user) return res.status(400).json({ message: 'User not found' });
+        const existingUser = await User.findOne({ username });
+        if (existingUser)
+        return res.status(400).json({ message: 'User already exists' });
 
-        const isMatch = await bcrypt.compare(password, user.password);
-        if (!isMatch) return res.status(400).json({ message: 'Invalid password' });
+        const hashedPassword = await bcrypt.hash(password, 10);
 
-        // Normalize the role from the request
-        role = role.trim().toLowerCase();
+        // Normalize role
+        const allowedRoles = ['HR', 'Admin', 'Employee'];
+
+        // Convert input role to match enum values
+        role = role.trim().toLowerCase(); // "hr"
         if (role === 'hr') role = 'HR';
         else if (role === 'admin') role = 'Admin';
         else if (role === 'employee') role = 'Employee';
         else return res.status(400).json({ message: 'Invalid role provided' });
 
-        // Check if the normalized role matches
-        if (user.role !== role) {
-            return res.status(403).json({ message: 'Incorrect role selected' });
-        }
+        const newUser = new User({
+        username,
+        password: hashedPassword,
+        role
+        });
 
-        res.status(200).json({ message: 'Login successful', user });
-
+        await newUser.save();
+        res.status(201).json({ message: 'User registered successfully' });
     } catch (error) {
         res.status(500).json({ message: 'Server error', error });
     }
-};
+    };
 
+
+    exports.loginUser = async (req, res) => {
+        let { username, password, role } = req.body;
+
+        try {
+            const user = await User.findOne({ username });
+            if (!user) return res.status(400).json({ message: 'User not found' });
+
+            const isMatch = await bcrypt.compare(password, user.password);
+            if (!isMatch) return res.status(400).json({ message: 'Invalid password' });
+
+            // Normalize the role from the request
+            role = role.trim().toLowerCase();
+            if (role === 'hr') role = 'HR';
+            else if (role === 'admin') role = 'Admin';
+            else if (role === 'employee') role = 'Employee';
+            else return res.status(400).json({ message: 'Invalid role provided' });
+
+            // Check if the normalized role matches
+            if (user.role !== role) {
+                return res.status(403).json({ message: 'Incorrect role selected' });
+            }
+
+            res.status(200).json({ message: 'Login successful', user });
+
+        } catch (error) {
+            res.status(500).json({ message: 'Server error', error });
+        }
+    };
+
+    exports.updateProfile = async (req, res) => {
+        try {
+            const userId = req.params.id;
+            const { name, age } = req.body;
+
+            const profileImage = req.file ? req.file.filename : null;
+
+            const updatedFields = { name, age };
+            if (profileImage) {
+                updatedFields.profileImage = profileImage;
+            }
+
+            const updatedUser = await User.findByIdAndUpdate(
+                userId,
+                { $set: updatedFields },
+                { new: true }
+            );
+
+            if (!updatedUser) {
+                return res.status(404).json({ message: 'User not found' });
+            }
+
+            res.status(200).json({ message: 'Profile updated successfully', user: updatedUser });
+        } catch (error) {
+            console.error('Update error:', error);
+            res.status(500).json({ message: 'Server error during profile update' });
+        }
+    };
+
+    
 

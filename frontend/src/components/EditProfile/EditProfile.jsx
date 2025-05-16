@@ -5,8 +5,9 @@ import './EditProfile.css';
 const EditProfile = () => {
   const [name, setName] = useState('');
   const [age, setAge] = useState('');
-  const [profileImage, setProfileImage] = useState('');
+  const [profileImage, setProfileImage] = useState(null); // store file
   const [preview, setPreview] = useState('assets/images/default-avatar.png');
+  const [userId, setUserId] = useState('');
   const navigate = useNavigate();
 
   const token = localStorage.getItem('token');
@@ -15,13 +16,15 @@ const EditProfile = () => {
     if (!token) {
       setName('');
       setAge('');
-      setProfileImage('');
+      setProfileImage(null);
       setPreview('assets/images/default-avatar.png');
       return;
     }
 
     fetch('/api/user/profile', {
-      headers: { 'Authorization': `Bearer ${token}` },
+      headers: {
+        'Authorization': `Bearer ${token}`
+      },
     })
       .then(res => res.json())
       .then(data => {
@@ -30,63 +33,55 @@ const EditProfile = () => {
         setName(username);
         localStorage.setItem('username', username);
 
-        const imageUrl = data.profileImage || 'assets/images/default-avatar.png';
-        setProfileImage(imageUrl);
+        const imageUrl = data.profileImage
+          ? `/uploads/${data.profileImage}`  // Adjust path if needed
+          : 'assets/images/default-avatar.png';
+
         setPreview(imageUrl);
+        setUserId(data._id); // Get userId for PUT request
       })
       .catch(err => {
         console.error('Failed to load profile:', err);
       });
   }, [token]);
 
-  const handleImageChange = async (e) => {
+  const handleImageChange = (e) => {
     const file = e.target.files[0];
     if (file) {
-      const formData = new FormData();
-      formData.append('profileImage', file);
-
-      try {
-        const res = await fetch('/api/user/upload-profile-image', {
-          method: 'POST',
-          headers: { 'Authorization': `Bearer ${token}` },
-          body: formData,
-        });
-        const data = await res.json();
-        if (data.imageUrl) {
-          setPreview(data.imageUrl);
-          setProfileImage(data.imageUrl);
-        }
-      } catch (error) {
-        console.error('Image upload failed:', error);
-      }
+      setProfileImage(file); // Save file to state
+      const previewURL = URL.createObjectURL(file);
+      setPreview(previewURL); // Instant preview
     }
   };
 
   const handleSave = async (e) => {
     e.preventDefault();
 
+    const formData = new FormData();
+    formData.append('name', name);
+    formData.append('age', age);
+    if (profileImage) {
+      formData.append('profileImage', profileImage);
+    }
+
     try {
-      const res = await fetch('/api/user/update-profile', {
+      const res = await fetch(`/api/user/update-profile/${userId}`, {
         method: 'PUT',
         headers: {
-          'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`,
         },
-        body: JSON.stringify({
-          username: name,
-          age,
-          profileImage,
-        }),
+        body: formData,
       });
+
+      const data = await res.json();
 
       if (res.ok) {
         localStorage.setItem('username', name);
-        localStorage.setItem('profileImg', profileImage);
         alert('Profile updated successfully!');
         navigate('/employee-dashboard');
         window.location.reload();
       } else {
-        alert('Failed to update profile.');
+        alert(data.message || 'Failed to update profile.');
       }
     } catch (error) {
       console.error('Error updating profile:', error);
