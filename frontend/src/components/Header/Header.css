@@ -24,10 +24,11 @@
   z-index: 1100;
 }
 
-/* Nav Links */
+/* Nav Links - default desktop style */
 .nav-links {
   display: flex;
   align-items: center;
+  margin-left: auto; /* ensure nav stays on the right */
 }
 
 .nav-links a {
@@ -58,50 +59,14 @@
   width: 100%;
 }
 
-/* Mobile Responsive Styles */
-@media (max-width: 768px) {
-  .hamburger {
-    display: block;
-  }
-
-  .nav-links {
-    position: fixed;
-    top: 0;
-    right: -300px;
-    height: 100%;
-    width: 250px;
-    background-color: #111;
-    flex-direction: column;
-    padding: 2rem 1.5rem;
-    transition: right 0.3s ease-in-out;
-    z-index: 1050;
-  }
-
-  .nav-links.open {
-    right: 0;
-  }
-
-  .nav-links a {
-    margin: 1rem 0;
-    font-size: 20px;
-  }
-
-  .overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    height: 100vh;
-    width: 100vw;
-    background: rgba(0, 0, 0, 0.5);
-    z-index: 1040;
-  }
-}
+/* Profile Dropdown */
 .profile-dropdown {
   display: flex;
   align-items: center;
   gap: 10px;
   cursor: pointer;
   margin-left: 1rem;
+  position: relative;
 }
 
 .profile-img {
@@ -110,9 +75,10 @@
   border-radius: 50%;
   object-fit: cover;
 }
+
 .profile-name {
   font-weight: 600;
-  font-size: 24px;
+  font-size: 20px;
   color: orangered;
 }
 
@@ -155,4 +121,44 @@
 .dropdown-menu a:hover,
 .logout-btn:hover {
   color: orangered;
+}
+
+/* Responsive Styles */
+@media (max-width: 768px) {
+  .hamburger {
+    display: block;
+  }
+
+  .nav-links {
+    position: fixed;
+    top: 0;
+    right: -300px;
+    height: 100%;
+    width: 250px;
+    background-color: #111;
+    flex-direction: column;
+    padding: 2rem 1.5rem;
+    transition: right 0.3s ease-in-out;
+    z-index: 1050;
+    margin-left: 0; /* remove left margin in mobile view */
+  }
+
+  .nav-links.open {
+    right: 0;
+  }
+
+  .nav-links a {
+    margin: 1rem 0;
+    font-size: 20px;
+  }
+
+  .overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100vh;
+    width: 100vw;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 1040;
+  }
 }
