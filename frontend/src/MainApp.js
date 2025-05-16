@@ -14,6 +14,7 @@ import EmployeeDashboard from './pages/EmployeeDashboard';
 import AdminDashboard from './pages/AdminDashboard.jsx';
 import HRDashboard from './pages/HrDashboard.jsx';
 import EditProfile from './components/EditProfile/EditProfile';
+import AllReportsPage from './pages/ReportsPage';
 
 
 const MainApp = () => {
@@ -130,18 +131,19 @@ const MainApp = () => {
         }
       />
 
-      <Route
-        path="/employees"
-        element={
-          isAuthenticated ? (
-            <DashboardLayout role={userRole}>
-              <Employees />
-            </DashboardLayout>
-          ) : (
-            <Navigate to="/" replace />
-          )
-        }
-      />
+     <Route
+  path="/employees"
+  element={
+    isAuthenticated && (userRole === 'admin' || userRole === 'hr') ? (
+      <DashboardLayout role={userRole}>
+        <Employees />
+      </DashboardLayout>
+    ) : (
+      <Navigate to="/unauthorized" replace />
+    )
+  }
+/>
+
 
       <Route
         path="/leaves"
@@ -168,6 +170,18 @@ const MainApp = () => {
           )
         }
       />
+      <Route
+  path="/reports"
+  element={
+    isAuthenticated && (userRole === 'admin' || userRole === 'hr') ? (
+      <DashboardLayout role={userRole}>
+        <AllReportsPage />
+      </DashboardLayout>
+    ) : (
+      <Navigate to="/unauthorized" replace />
+    )
+  }
+/>
 
       <Route
         path="/calendar"

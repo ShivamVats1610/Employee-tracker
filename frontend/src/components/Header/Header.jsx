@@ -45,7 +45,7 @@ const Header = ({ role }) => {
             <Link to="/admin-dashboard" onClick={toggleMenu}>Dashboard</Link>
             <Link to="/employees" onClick={toggleMenu}>Manage Employees</Link>
             <Link to="/leaves" onClick={toggleMenu}>Leave Requests</Link>
-            <Link to="/daily-report" onClick={toggleMenu}>Reports</Link>
+            <Link to="/reports" onClick={toggleMenu}>Reports</Link>
             <Link to="/calendar" onClick={toggleMenu}>Leave Calendar</Link>
           </>
         )}
@@ -55,7 +55,7 @@ const Header = ({ role }) => {
             <Link to="/hr-dashboard" onClick={toggleMenu}>Dashboard</Link>
             <Link to="/leaves" onClick={toggleMenu}>Manage Leaves</Link>
             <Link to="/employees" onClick={toggleMenu}>Manage Employees</Link>
-            <Link to="/daily-report" onClick={toggleMenu}>Reports</Link>
+            <Link to="/reports" onClick={toggleMenu}>Reports</Link>
           </>
         )}
 
