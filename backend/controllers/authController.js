@@ -3,30 +3,41 @@ const User = require('../models/User.js');
 const bcrypt = require('bcryptjs');
 
 exports.registerUser = async (req, res) => {
-    const { username, password, role } = req.body;
+  let { username, password, role } = req.body;
 
-    try {
-        const existingUser = await User.findOne({ username });
-        if (existingUser) return res.status(400).json({ message: 'User already exists' });
+  try {
+    const existingUser = await User.findOne({ username });
+    if (existingUser)
+      return res.status(400).json({ message: 'User already exists' });
 
-        const hashedPassword = await bcrypt.hash(password, 10);
+    const hashedPassword = await bcrypt.hash(password, 10);
 
-        const newUser = new User({
-            username,
-            password: hashedPassword,
-            role
-        });
+    // Normalize role
+    const allowedRoles = ['HR', 'Admin', 'Employee'];
 
-        await newUser.save();
-        res.status(201).json({ message: 'User registered successfully' });
+    // Convert input role to match enum values
+    role = role.trim().toLowerCase(); // "hr"
+    if (role === 'hr') role = 'HR';
+    else if (role === 'admin') role = 'Admin';
+    else if (role === 'employee') role = 'Employee';
+    else return res.status(400).json({ message: 'Invalid role provided' });
 
-    } catch (error) {
-        res.status(500).json({ message: 'Server error', error });
-    }
+    const newUser = new User({
+      username,
+      password: hashedPassword,
+      role
+    });
+
+    await newUser.save();
+    res.status(201).json({ message: 'User registered successfully' });
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error });
+  }
 };
 
+
 exports.loginUser = async (req, res) => {
-    const { username, password, role } = req.body;
+    let { username, password, role } = req.body;
 
     try {
         const user = await User.findOne({ username });
@@ -35,6 +46,14 @@ exports.loginUser = async (req, res) => {
         const isMatch = await bcrypt.compare(password, user.password);
         if (!isMatch) return res.status(400).json({ message: 'Invalid password' });
 
+        // Normalize the role from the request
+        role = role.trim().toLowerCase();
+        if (role === 'hr') role = 'HR';
+        else if (role === 'admin') role = 'Admin';
+        else if (role === 'employee') role = 'Employee';
+        else return res.status(400).json({ message: 'Invalid role provided' });
+
+        // Check if the normalized role matches
         if (user.role !== role) {
             return res.status(403).json({ message: 'Incorrect role selected' });
         }
@@ -45,4 +64,5 @@ exports.loginUser = async (req, res) => {
         res.status(500).json({ message: 'Server error', error });
     }
 };
+
 
