@@ -18,7 +18,6 @@ const LoginForm = ({ onLogin }) => {
 
     const capitalizedRole = role.charAt(0).toUpperCase() + role.slice(1);
 
-    // ✳ Basic field validation
     if (!username.trim() || !password.trim() || (isRegister && !confirmPassword.trim())) {
       enqueueSnackbar('All fields are required!', { variant: 'error' });
       return;
@@ -50,9 +49,12 @@ const LoginForm = ({ onLogin }) => {
         enqueueSnackbar(data.message, { variant: 'success' });
 
         if (!isRegister) {
-          localStorage.setItem('role', capitalizedRole);
-          localStorage.setItem('username', username); 
-          onLogin(capitalizedRole);
+          // Save id, username, and role from backend response
+          localStorage.setItem('id', data.user._id);
+          localStorage.setItem('username', data.user.username);
+          localStorage.setItem('role', data.user.role);
+
+          onLogin(data.user.role);
           navigate('/dashboard');
         } else {
           setIsRegister(false);
@@ -72,8 +74,8 @@ const LoginForm = ({ onLogin }) => {
       <div className="form-container">
         <div className="login-box">
           <div className="logo-wrapper">
-        <img src="/assets/images/logo.png" alt="Employee Tracker Logo" className="logo" />
-      </div>
+            <img src="/assets/images/logo.png" alt="Employee Tracker Logo" className="logo" />
+          </div>
           <h2>{isRegister ? 'Register' : 'Login'}</h2>
           <form onSubmit={handleSubmit}>
             <div className="input-group">
@@ -137,7 +139,6 @@ const LoginForm = ({ onLogin }) => {
   );
 };
 
-// 👉 Wrap LoginForm with SnackbarProvider
 const LoginPage = (props) => (
   <SnackbarProvider
     maxSnack={3}

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'; // <-- Add useEffect
+import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import './Header.css';
 
@@ -8,25 +8,37 @@ const Header = ({ role }) => {
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [username, setUsername] = useState('');
   const [profileImg, setProfileImg] = useState('assets/images/default-avatar.png');
+  const profileRef = useRef(null);
+  const navRef = useRef(null);
 
   useEffect(() => {
-    // Load data from localStorage when component mounts
     const storedUsername = localStorage.getItem('username');
     const storedProfileImg = localStorage.getItem('profileImg');
     if (storedUsername) setUsername(storedUsername);
     if (storedProfileImg) setProfileImg(storedProfileImg);
   }, []);
 
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (
+        profileRef.current &&
+        !profileRef.current.contains(event.target) &&
+        navRef.current &&
+        !navRef.current.contains(event.target)
+      ) {
+        setShowProfileMenu(false);
+        setIsOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
   const handleLogout = () => {
-    localStorage.removeItem('role');
-    localStorage.removeItem('username');
-    localStorage.removeItem('profileImg');
+    localStorage.clear();
     navigate('/');
     window.location.reload();
   };
-
-  const toggleMenu = () => setIsOpen(!isOpen);
-  const toggleProfileMenu = () => setShowProfileMenu(!showProfileMenu);
 
   if (!role) return null;
   const normalizedRole = role.toLowerCase();
@@ -35,41 +47,46 @@ const Header = ({ role }) => {
     <header className="header">
       <img src="assets/images/logo.png" alt="Employee Tracker Logo" className="logo" />
 
-      <div className="hamburger" onClick={toggleMenu}>
+      <div className="hamburger" onClick={() => setIsOpen(!isOpen)}>
         {isOpen ? '✖' : '☰'}
       </div>
 
-      <nav className={`nav-links ${isOpen ? 'open' : ''}`}>
+      <nav className={`nav-links ${isOpen ? 'open' : ''}`} ref={navRef}>
         {normalizedRole === 'admin' && (
           <>
-            <Link to="/admin-dashboard" onClick={toggleMenu}>Dashboard</Link>
-            <Link to="/employees" onClick={toggleMenu}>Manage Employees</Link>
-            <Link to="/leaves" onClick={toggleMenu}>Leave Requests</Link>
-            <Link to="/reports" onClick={toggleMenu}>Reports</Link>
-            <Link to="/calendar" onClick={toggleMenu}>Leave Calendar</Link>
+            <Link to="/admin-dashboard" onClick={() => setIsOpen(false)}>Dashboard</Link>
+            <Link to="/employees" onClick={() => setIsOpen(false)}>Manage Employees</Link>
+            <Link to="/leaves" onClick={() => setIsOpen(false)}>Leave Requests</Link>
+            <Link to="/reports" onClick={() => setIsOpen(false)}>Reports</Link>
+            <Link to="/calendar" onClick={() => setIsOpen(false)}>Leave Calendar</Link>
           </>
         )}
 
         {normalizedRole === 'hr' && (
           <>
-            <Link to="/hr-dashboard" onClick={toggleMenu}>Dashboard</Link>
-            <Link to="/leaves" onClick={toggleMenu}>Manage Leaves</Link>
-            <Link to="/employees" onClick={toggleMenu}>Manage Employees</Link>
-            <Link to="/reports" onClick={toggleMenu}>Reports</Link>
+            <Link to="/hr-dashboard" onClick={() => setIsOpen(false)}>Dashboard</Link>
+            <Link to="/leaves" onClick={() => setIsOpen(false)}>Manage Leaves</Link>
+            <Link to="/employees" onClick={() => setIsOpen(false)}>Manage Employees</Link>
+            <Link to="/reports" onClick={() => setIsOpen(false)}>Reports</Link>
           </>
         )}
 
         {normalizedRole === 'employee' && (
           <>
-            <Link to="/employee-dashboard" onClick={toggleMenu}>Dashboard</Link>
-            <Link to="/check-in-out" onClick={toggleMenu}>Check In/Out</Link>
-            <Link to="/apply-leave" onClick={toggleMenu}>Apply Leave</Link>
-            <Link to="/daily-report" onClick={toggleMenu}>Daily Report</Link>
-            <Link to="/calendar" onClick={toggleMenu}>My Calendar</Link>
+            <Link to="/employee-dashboard" onClick={() => setIsOpen(false)}>Dashboard</Link>
+            <Link to="/check-in-out" onClick={() => setIsOpen(false)}>Check In/Out</Link>
+            <Link to="/apply-leave" onClick={() => setIsOpen(false)}>Apply Leave</Link>
+            <Link to="/daily-report" onClick={() => setIsOpen(false)}>Daily Report</Link>
+            <Link to="/calendar" onClick={() => setIsOpen(false)}>My Calendar</Link>
           </>
         )}
 
-        <div className="profile-dropdown" onClick={toggleProfileMenu} style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <div
+          ref={profileRef}
+          className="profile-dropdown"
+          onClick={() => setShowProfileMenu(prev => !prev)}
+          style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px' }}
+        >
           <img src={profileImg} alt="Profile" className="profile-img" />
           <span className="profile-name">{username || 'User'}</span>
 
@@ -79,14 +96,14 @@ const Header = ({ role }) => {
                 <img src={profileImg} alt="Avatar" />
                 <span>{username}</span>
               </div>
-              <Link to="/edit-profile" onClick={toggleMenu}>Edit Profile</Link>
+              <Link to="/edit-profile" onClick={() => { setShowProfileMenu(false); setIsOpen(false); }}>Edit Profile</Link>
               <span className="logout-btn" onClick={handleLogout}>Logout</span>
             </div>
           )}
         </div>
       </nav>
 
-      {isOpen && <div className="overlay" onClick={toggleMenu}></div>}
+      {isOpen && <div className="overlay"></div>}
     </header>
   );
 };

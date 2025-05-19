@@ -11,6 +11,7 @@ const EditProfile = () => {
   const navigate = useNavigate();
 
   const token = localStorage.getItem('token');
+  const API_BASE_URL = 'http://localhost:8082'; // backend server URL
 
   useEffect(() => {
     if (!token) {
@@ -21,12 +22,15 @@ const EditProfile = () => {
       return;
     }
 
-    fetch('/api/user/profile', {
+    fetch(`${API_BASE_URL}/api/auth/profile`, {  // <-- Make sure this route matches your backend (see note below)
       headers: {
         'Authorization': `Bearer ${token}`
       },
     })
-      .then(res => res.json())
+      .then(res => {
+        if (!res.ok) throw new Error('Failed to fetch profile');
+        return res.json();
+      })
       .then(data => {
         setAge(data.age || '');
         const username = data.username || localStorage.getItem('username') || '';
@@ -34,7 +38,7 @@ const EditProfile = () => {
         localStorage.setItem('username', username);
 
         const imageUrl = data.profileImage
-          ? `/uploads/${data.profileImage}`  // Adjust path if needed
+          ? `${API_BASE_URL}/uploads/${data.profileImage}`  // Use full URL for image preview
           : 'assets/images/default-avatar.png';
 
         setPreview(imageUrl);
@@ -65,11 +69,12 @@ const EditProfile = () => {
     }
 
     try {
-      const res = await fetch(`/api/user/update-profile/${userId}`, {
+      const res = await fetch(`${API_BASE_URL}/api/auth/update-profile`,  {
         method: 'PUT',
         headers: {
-          'Authorization': `Bearer ${token}`,
-        },
+  'Authorization': `Bearer ${token}`,
+  // Do NOT manually set Content-Type for FormData
+},
         body: formData,
       });
 
