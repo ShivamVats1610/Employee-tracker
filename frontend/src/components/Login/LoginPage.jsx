@@ -49,10 +49,21 @@ const LoginForm = ({ onLogin }) => {
         enqueueSnackbar(data.message, { variant: 'success' });
 
         if (!isRegister) {
-          // Save id, username, and role from backend response
+          // Save basic info
           localStorage.setItem('id', data.user._id);
-          localStorage.setItem('username', data.user.username);
           localStorage.setItem('role', data.user.role);
+
+          // Fetch full profile info after login
+          const profileRes = await fetch(`http://localhost:8082/api/auth/profile/${data.user._id}`);
+          const profileData = await profileRes.json();
+
+          // Save profile info to localStorage for persistence
+          localStorage.setItem('username', profileData.name || data.user.username);
+          if (profileData.profileImage) {
+            localStorage.setItem('profileImg', `http://localhost:8082/api/uploads/${profileData.profileImage}`);
+          } else {
+            localStorage.setItem('profileImg', '/assets/images/default-avatar.jpg');
+          }
 
           onLogin(data.user.role);
           navigate('/dashboard');

@@ -7,15 +7,19 @@ const Header = ({ role }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [username, setUsername] = useState('');
-  const [profileImg, setProfileImg] = useState('assets/images/default-avatar.png');
+  const [profileImg, setProfileImg] = useState('assets/images/default-avatar.jpg');
   const profileRef = useRef(null);
   const navRef = useRef(null);
 
   useEffect(() => {
     const storedUsername = localStorage.getItem('username');
     const storedProfileImg = localStorage.getItem('profileImg');
+
     if (storedUsername) setUsername(storedUsername);
-    if (storedProfileImg) setProfileImg(storedProfileImg);
+    if (storedProfileImg) {
+      const cleanPath = storedProfileImg.replace("http://localhost:8082/api/uploads/", "");
+      setProfileImg(cleanPath);
+    }
   }, []);
 
   useEffect(() => {
@@ -42,6 +46,11 @@ const Header = ({ role }) => {
 
   if (!role) return null;
   const normalizedRole = role.toLowerCase();
+
+  const getFullImagePath = (imgPath) => {
+    if (!imgPath) return 'assets/images/default-avatar.jpg';
+    return imgPath.startsWith('http') ? imgPath : `http://localhost:8082/api/uploads/${imgPath}`;
+  };
 
   return (
     <header className="header">
@@ -87,13 +96,13 @@ const Header = ({ role }) => {
           onClick={() => setShowProfileMenu(prev => !prev)}
           style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px' }}
         >
-          <img src={profileImg} alt="Profile" className="profile-img" />
+          <img src={getFullImagePath(profileImg)} alt="Profile" className="profile-img" />
           <span className="profile-name">{username || 'User'}</span>
 
           {showProfileMenu && (
             <div className="dropdown-menu">
               <div className="profile-info">
-                <img src={profileImg} alt="Avatar" />
+                <img src={getFullImagePath(profileImg)} alt="Avatar" />
                 <span>{username}</span>
               </div>
               <Link to="/edit-profile" onClick={() => { setShowProfileMenu(false); setIsOpen(false); }}>Edit Profile</Link>

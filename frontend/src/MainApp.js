@@ -1,4 +1,3 @@
-// MainApp.js
 import React, { useEffect, useState } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 
@@ -15,7 +14,6 @@ import AdminDashboard from './pages/AdminDashboard.jsx';
 import HRDashboard from './pages/HrDashboard.jsx';
 import EditProfile from './components/EditProfile/EditProfile';
 import AllReportsPage from './pages/ReportsPage';
-
 
 const MainApp = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -35,6 +33,12 @@ const MainApp = () => {
     setUserRole(normalizedRole);
     setIsAuthenticated(true);
   };
+
+  const renderDashboard = (component) => (
+    <DashboardLayout role={userRole}>
+      {component}
+    </DashboardLayout>
+  );
 
   return (
     <Routes>
@@ -60,143 +64,106 @@ const MainApp = () => {
       <Route
         path="/admin-dashboard"
         element={
-          isAuthenticated && userRole === 'admin' ? (
-            <DashboardLayout role="admin">
-              <AdminDashboard />
-            </DashboardLayout>
-          ) : (
-            <Navigate to="/" replace />
-          )
+          isAuthenticated && userRole === 'admin'
+            ? renderDashboard(<AdminDashboard />)
+            : <Navigate to="/" replace />
         }
       />
 
       <Route
         path="/hr-dashboard"
         element={
-          isAuthenticated && userRole === 'hr' ? (
-            <DashboardLayout role="hr">
-              <HRDashboard />
-            </DashboardLayout>
-          ) : (
-            <Navigate to="/" replace />
-          )
+          isAuthenticated && userRole === 'hr'
+            ? renderDashboard(<HRDashboard />)
+            : <Navigate to="/" replace />
         }
       />
 
       <Route
         path="/employee-dashboard"
         element={
-          isAuthenticated && userRole === 'employee' ? (
-            <DashboardLayout role="employee">
-              <EmployeeDashboard />
-            </DashboardLayout>
-          ) : (
-            <Navigate to="/" replace />
-          )
+          isAuthenticated && userRole === 'employee'
+            ? renderDashboard(<EmployeeDashboard />)
+            : <Navigate to="/" replace />
         }
       />
+
       <Route
-  path="/edit-profile"
-  element={
-    isAuthenticated ? (
-      <EditProfile userRole={userRole} />
-    ) : (
-      <Navigate to="/" replace />
-    )
-  }
-/>
+        path="/edit-profile"
+        element={
+          isAuthenticated
+            ? <EditProfile userRole={userRole} />
+            : <Navigate to="/" replace />
+        }
+      />
+
       <Route
         path="/check-in-out"
         element={
-          isAuthenticated ? (
-            <DashboardLayout role={userRole}>
-              <CheckInOutPage />
-            </DashboardLayout>
-          ) : (
-            <Navigate to="/" replace />
-          )
+          isAuthenticated
+            ? renderDashboard(<CheckInOutPage />)
+            : <Navigate to="/" replace />
         }
       />
 
       <Route
         path="/apply-leave"
         element={
-          isAuthenticated ? (
-            <DashboardLayout role={userRole}>
-              <ApplyLeavePage />
-            </DashboardLayout>
-          ) : (
-            <Navigate to="/" replace />
-          )
+          isAuthenticated
+            ? renderDashboard(<ApplyLeavePage />)
+            : <Navigate to="/" replace />
         }
       />
 
-     <Route
-  path="/employees"
-  element={
-    isAuthenticated && (userRole === 'admin' || userRole === 'hr') ? (
-      <DashboardLayout role={userRole}>
-        <Employees />
-      </DashboardLayout>
-    ) : (
-      <Navigate to="/unauthorized" replace />
-    )
-  }
-/>
-
+      <Route
+        path="/employees"
+        element={
+          isAuthenticated && (userRole === 'admin' || userRole === 'hr')
+            ? renderDashboard(<Employees />)
+            : <Navigate to="/unauthorized" replace />
+        }
+      />
 
       <Route
         path="/leaves"
         element={
-          isAuthenticated ? (
-            <DashboardLayout role={userRole}>
-              <Leaves />
-            </DashboardLayout>
-          ) : (
-            <Navigate to="/" replace />
-          )
+          isAuthenticated
+            ? renderDashboard(<Leaves />)
+            : <Navigate to="/" replace />
         }
       />
 
       <Route
         path="/daily-report"
         element={
-          isAuthenticated ? (
-            <DashboardLayout role={userRole}>
-              <Reports />
-            </DashboardLayout>
-          ) : (
-            <Navigate to="/" replace />
-          )
+          isAuthenticated
+            ? renderDashboard(<Reports />)
+            : <Navigate to="/" replace />
         }
       />
+
       <Route
-  path="/reports"
-  element={
-    isAuthenticated && (userRole === 'admin' || userRole === 'hr') ? (
-      <DashboardLayout role={userRole}>
-        <AllReportsPage />
-      </DashboardLayout>
-    ) : (
-      <Navigate to="/unauthorized" replace />
-    )
-  }
-/>
+        path="/reports"
+        element={
+          isAuthenticated && (userRole === 'admin' || userRole === 'hr')
+            ? renderDashboard(<AllReportsPage />)
+            : <Navigate to="/unauthorized" replace />
+        }
+      />
 
       <Route
         path="/calendar"
         element={
-          isAuthenticated ? (
-            <DashboardLayout role={userRole}>
-              <Calendar />
-            </DashboardLayout>
-          ) : (
-            <Navigate to="/" replace />
-          )
+          isAuthenticated
+            ? renderDashboard(<Calendar />)
+            : <Navigate to="/" replace />
         }
       />
 
       <Route path="/unauthorized" element={<h2>Unauthorized Access</h2>} />
+
+      {/* Catch-all 404 route */}
+      <Route path="*" element={<h2>Page Not Found</h2>} />
     </Routes>
   );
 };

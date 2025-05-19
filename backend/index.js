@@ -1,7 +1,7 @@
 const express = require('express');
 const connectDB = require('./config/db.js');
 const cors = require('cors');
-const path = require('path'); // ✅ Add this line
+const path = require('path');
 
 const app = express();
 
@@ -12,9 +12,11 @@ app.use(express.json());
 // DB Connection
 connectDB();
 
+// ✅ Serve uploaded images statically
+app.use('/api/uploads', express.static(path.join(__dirname, 'uploads')));
+
 // Routes
 app.use('/api/auth', require('./routes/authRoutes.js'));
-// app.use('/api/uploads/profileImages', express.static(path.join(__dirname, 'uploads/profileImages')));
 
 // Checkin/Checkout routes
 app.post('/api/checkin', (req, res) => {

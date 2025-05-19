@@ -1,15 +1,27 @@
 const express = require('express');
 const router = express.Router();
 
-const { registerUser, loginUser, updateProfile,getProfile } = require('../controllers/authController');
-const upload = require('../middlewares/upload.js'); // <-- Import your multer middleware
+// Controllers
+const {
+  registerUser,
+  loginUser,
+  updateProfile,
+  getProfile
+} = require('../controllers/authController');
 
+// Multer middleware for image upload
+const upload = require('../middlewares/upload.js');
+
+// Register new user
 router.post('/register', registerUser);
+
+// Login existing user
 router.post('/login', loginUser);
 
-// Profile update route with upload middleware
-router.put('/update-profile/:id', upload.single('profileImage'), updateProfile);
-router.get('/profile/:id',getProfile);
+// Get user profile by ID
+router.get('/profile/:id', getProfile);
 
+// Update user profile with image upload
+router.put('/update-profile/:id', upload.single('profileImage'), updateProfile);
 
 module.exports = router;

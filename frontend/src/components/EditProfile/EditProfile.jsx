@@ -6,7 +6,7 @@ const EditProfile = () => {
   const [name, setName] = useState('');
   const [age, setAge] = useState('');
   const [profileImage, setProfileImage] = useState(null);
-  const [preview, setPreview] = useState('assets/images/default-avatar.jpg');
+  const [preview, setPreview] = useState('/assets/images/default-avatar.jpg');
   const navigate = useNavigate();
 
   const userId = localStorage.getItem('id');
@@ -17,7 +17,7 @@ const EditProfile = () => {
       setName('');
       setAge('');
       setProfileImage(null);
-      setPreview('assets/images/default-avatar.png');
+      setPreview('/assets/images/default-avatar.jpg');
       return;
     }
 
@@ -33,24 +33,39 @@ const EditProfile = () => {
         localStorage.setItem('username', username);
 
         const imageUrl = data.profileImage
-          ? `${API_BASE_URL}/api/uploads/${data.profileImage}`  // 🔁 updated path
-          : 'assets/images/default-avatar.png';
+          ? `${API_BASE_URL}/api/uploads/${data.profileImage}`
+          : '/assets/images/default-avatar.jpg';
 
         setPreview(imageUrl);
 
         if (data.profileImage) {
           localStorage.setItem('profileImg', imageUrl);
+        } else {
+          localStorage.removeItem('profileImg');
         }
       })
       .catch(err => {
         console.error('Failed to load profile:', err);
       });
+
+    // Clean up preview URL object when component unmounts or preview changes from object URL
+    return () => {
+      if (preview && preview.startsWith('blob:')) {
+        URL.revokeObjectURL(preview);
+      }
+    };
   }, [userId]);
 
   const handleImageChange = (e) => {
     const file = e.target.files[0];
     if (file) {
       setProfileImage(file);
+
+      // Revoke previous object URL to avoid memory leaks
+      if (preview && preview.startsWith('blob:')) {
+        URL.revokeObjectURL(preview);
+      }
+
       const previewURL = URL.createObjectURL(file);
       setPreview(previewURL);
     }
@@ -58,6 +73,11 @@ const EditProfile = () => {
 
   const handleSave = async (e) => {
     e.preventDefault();
+
+    if (!userId) {
+      alert('User not logged in.');
+      return;
+    }
 
     const formData = new FormData();
     formData.append('name', name);
@@ -77,14 +97,15 @@ const EditProfile = () => {
       if (res.ok) {
         localStorage.setItem('username', name);
 
-        if (data.updatedUser && data.updatedUser.profileImage) {
-          const imageUrl = `${API_BASE_URL}/api/uploads/${data.updatedUser.profileImage}`; // 🔁 updated path
+        if (data.user && data.user.profileImage) {
+          const imageUrl = `${API_BASE_URL}/api/uploads/${data.user.profileImage}`;
           localStorage.setItem('profileImg', imageUrl);
+          setPreview(imageUrl); // Update preview to saved image
         }
 
         alert('Profile updated successfully!');
         navigate('/employee-dashboard');
-        window.location.reload();
+        // Avoid full reload; React state should update UI
       } else {
         alert(data.message || 'Failed to update profile.');
       }
