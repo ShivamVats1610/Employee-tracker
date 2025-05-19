@@ -5,16 +5,15 @@ import './EditProfile.css';
 const EditProfile = () => {
   const [name, setName] = useState('');
   const [age, setAge] = useState('');
-  const [profileImage, setProfileImage] = useState(null); // store file
-  const [preview, setPreview] = useState('assets/images/default-avatar.png');
-  const [userId, setUserId] = useState('');
+  const [profileImage, setProfileImage] = useState(null);
+  const [preview, setPreview] = useState('assets/images/default-avatar.jpg');
   const navigate = useNavigate();
 
-  const token = localStorage.getItem('token');
-  const API_BASE_URL = 'http://localhost:8082'; // backend server URL
+  const userId = localStorage.getItem('id');
+  const API_BASE_URL = 'http://localhost:8082';
 
   useEffect(() => {
-    if (!token) {
+    if (!userId) {
       setName('');
       setAge('');
       setProfileImage(null);
@@ -22,39 +21,38 @@ const EditProfile = () => {
       return;
     }
 
-    fetch(`${API_BASE_URL}/api/auth/profile`, {  // <-- Make sure this route matches your backend (see note below)
-      headers: {
-        'Authorization': `Bearer ${token}`
-      },
-    })
+    fetch(`${API_BASE_URL}/api/auth/profile/${userId}`)
       .then(res => {
         if (!res.ok) throw new Error('Failed to fetch profile');
         return res.json();
       })
       .then(data => {
         setAge(data.age || '');
-        const username = data.username || localStorage.getItem('username') || '';
+        const username = data.name || localStorage.getItem('username') || '';
         setName(username);
         localStorage.setItem('username', username);
 
         const imageUrl = data.profileImage
-          ? `${API_BASE_URL}/uploads/${data.profileImage}`  // Use full URL for image preview
+          ? `${API_BASE_URL}/api/uploads/${data.profileImage}`  // 🔁 updated path
           : 'assets/images/default-avatar.png';
 
         setPreview(imageUrl);
-        setUserId(data._id); // Get userId for PUT request
+
+        if (data.profileImage) {
+          localStorage.setItem('profileImg', imageUrl);
+        }
       })
       .catch(err => {
         console.error('Failed to load profile:', err);
       });
-  }, [token]);
+  }, [userId]);
 
   const handleImageChange = (e) => {
     const file = e.target.files[0];
     if (file) {
-      setProfileImage(file); // Save file to state
+      setProfileImage(file);
       const previewURL = URL.createObjectURL(file);
-      setPreview(previewURL); // Instant preview
+      setPreview(previewURL);
     }
   };
 
@@ -69,12 +67,8 @@ const EditProfile = () => {
     }
 
     try {
-      const res = await fetch(`${API_BASE_URL}/api/auth/update-profile`,  {
+      const res = await fetch(`${API_BASE_URL}/api/auth/update-profile/${userId}`, {
         method: 'PUT',
-        headers: {
-  'Authorization': `Bearer ${token}`,
-  // Do NOT manually set Content-Type for FormData
-},
         body: formData,
       });
 
@@ -82,6 +76,12 @@ const EditProfile = () => {
 
       if (res.ok) {
         localStorage.setItem('username', name);
+
+        if (data.updatedUser && data.updatedUser.profileImage) {
+          const imageUrl = `${API_BASE_URL}/api/uploads/${data.updatedUser.profileImage}`; // 🔁 updated path
+          localStorage.setItem('profileImg', imageUrl);
+        }
+
         alert('Profile updated successfully!');
         navigate('/employee-dashboard');
         window.location.reload();

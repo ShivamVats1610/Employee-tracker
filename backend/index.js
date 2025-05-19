@@ -1,7 +1,8 @@
 const express = require('express');
 const connectDB = require('./config/db.js');
 const cors = require('cors');
-// require('dotenv').config();
+const path = require('path'); // ✅ Add this line
+
 const app = express();
 
 // Middleware
@@ -13,26 +14,20 @@ connectDB();
 
 // Routes
 app.use('/api/auth', require('./routes/authRoutes.js'));
+// app.use('/api/uploads/profileImages', express.static(path.join(__dirname, 'uploads/profileImages')));
 
-// checkincheckout
+// Checkin/Checkout routes
 app.post('/api/checkin', (req, res) => {
-  // Handle the check-in process
   console.log('Employee checked-in.');
-  // Save check-in status to your database if needed
   res.send({ message: 'Check-in successful!' });
 });
 
 app.post('/api/checkout', (req, res) => {
-  // Handle the check-out process
   console.log('Employee checked-out.');
-  // Save check-out status to your database if needed
   res.send({ message: 'Check-out successful!' });
 });
 
-
-
 // Start Server
-app.listen(8082,()=>{
+app.listen(8082, () => {
   console.log('server is running on port 8082');
-})
-
+});
