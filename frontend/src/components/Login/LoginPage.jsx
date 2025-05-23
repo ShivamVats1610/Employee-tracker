@@ -58,6 +58,7 @@ const LoginForm = ({ onLogin }) => {
         if (!isRegister) {
           localStorage.setItem('id', data.user._id);
           localStorage.setItem('role', data.user.role);
+          localStorage.setItem('empid',data.user.id);
 
           const profileRes = await fetch(`http://localhost:8082/api/auth/profile/${data.user._id}`);
           const profileData = await profileRes.json();

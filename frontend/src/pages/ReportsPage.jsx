@@ -1,101 +1,172 @@
 import React, { useEffect, useState } from 'react';
 import './ReportsPage.css';
 
+const BASE_URL = 'http://localhost:8082';
+
 const ReportsPage = () => {
   const [employees, setEmployees] = useState([]);
-  const [selectedEmployeeId, setSelectedEmployeeId] = useState(null);
-  const [selectedEmployeeName, setSelectedEmployeeName] = useState('');
-  const [month, setMonth] = useState('2025-04');
+  const [selectedEmployee, setSelectedEmployee] = useState(null);
+  const [month, setMonth] = useState(() => {
+    const now = new Date();
+    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+  });
   const [reports, setReports] = useState([]);
+  const [loadingEmployees, setLoadingEmployees] = useState(true);
+  const [loadingReports, setLoadingReports] = useState(false);
+  const [errorEmployees, setErrorEmployees] = useState(null);
+  const [errorReports, setErrorReports] = useState(null);
 
-  // Fetch employees with role "employee"
+  // Load employees once on mount
   useEffect(() => {
     const fetchEmployees = async () => {
+      setLoadingEmployees(true);
+      setErrorEmployees(null);
       try {
-        const res = await fetch('/api/employees');
+        const res = await fetch(`${BASE_URL}/api/employees`);
+        if (!res.ok) throw new Error('Failed to fetch employees');
         const data = await res.json();
-        const employeeOnly = data.filter(emp => emp.role === 'employee');
-        setEmployees(employeeOnly);
-      } catch (error) {
-        console.error('Error fetching employees:', error);
+        const filtered = data.filter(emp => emp.role?.toLowerCase() === 'employee');
+        setEmployees(filtered);
+
+        // Load selectedEmpName from localStorage
+        const savedEmpName = localStorage.getItem('selectedEmpName');
+        if (savedEmpName) {
+          const matchedEmp = filtered.find(emp => emp.username === savedEmpName);
+          if (matchedEmp) {
+            setSelectedEmployee(matchedEmp);
+          } else {
+            setSelectedEmployee(null);
+          }
+        }
+      } catch (err) {
+        console.error('Employee fetch error:', err);
+        setErrorEmployees('Failed to load employees.');
+        setEmployees([]);
+      } finally {
+        setLoadingEmployees(false);
       }
     };
-
     fetchEmployees();
   }, []);
 
-  // Fetch reports for selected employee and month
+  // Clear previous reports when selected employee changes
+  useEffect(() => {
+    setReports([]);
+    setErrorReports(null);
+  }, [selectedEmployee]);
+
+  // Fetch reports when selectedEmployee or month changes
   useEffect(() => {
     const fetchReports = async () => {
-      if (!selectedEmployeeId) return;
+      if (!selectedEmployee?._id) {
+        setReports([]);
+        return;
+      }
+
+      setLoadingReports(true);
+      setErrorReports(null);
 
       try {
-        const res = await fetch(`/api/reports?employeeId=${selectedEmployeeId}&month=${month}`);
+        const url = `${BASE_URL}/api/reports/my?employeeId=${selectedEmployee._id}&month=${month}`;
+        const res = await fetch(url);
         const data = await res.json();
+
+        if (!res.ok) throw new Error(data.error || 'Failed to fetch reports');
+
         setReports(data);
-      } catch (error) {
-        console.error('Error fetching reports:', error);
+      } catch (err) {
+        console.error('Report fetch error:', err);
+        setErrorReports('Failed to load reports.');
+        setReports([]);
+      } finally {
+        setLoadingReports(false);
       }
     };
 
     fetchReports();
-  }, [selectedEmployeeId, month]);
+  }, [selectedEmployee, month]);
+
+  // Handle employee selection: update localStorage and state
+  const handleSelectEmployee = (emp) => {
+    setSelectedEmployee(emp);
+    localStorage.setItem('selectedEmpId', emp._id);
+    localStorage.setItem('selectedEmpName', emp.username); // Store username
+  };
 
   return (
-    <div className="reports-page">
-      <div className="employee-list">
+    <div className="reports-page" style={{ display: 'flex', gap: '1rem' }}>
+      {/* Left: Employee List */}
+      <div className="employee-list" style={{ flex: 1 }}>
         <h2>Employees</h2>
-        <ul>
-          {employees.map(emp => (
-            <li
-              key={emp.id}
-              onClick={() => {
-                setSelectedEmployeeId(emp.id);
-                setSelectedEmployeeName(emp.name);
-              }}
-              className={selectedEmployeeId === emp.id ? 'active' : ''}
-            >
-              {emp.name}
-            </li>
-          ))}
-        </ul>
+        {loadingEmployees ? (
+          <p>Loading employees...</p>
+        ) : errorEmployees ? (
+          <p className="error">{errorEmployees}</p>
+        ) : employees.length === 0 ? (
+          <p>No employees found.</p>
+        ) : (
+          <ul>
+            {employees.map(emp => (
+              <li
+                key={emp._id}
+                onClick={() => handleSelectEmployee(emp)}
+                className={selectedEmployee?._id === emp._id ? 'active' : ''}
+                tabIndex={0}
+                onKeyDown={e => {
+                  if (e.key === 'Enter' || e.key === ' ') handleSelectEmployee(emp);
+                }}
+                style={{ cursor: 'pointer', padding: '0.5rem' }}
+              >
+                {emp.name || emp.username || 'Unnamed'}
+              </li>
+            ))}
+          </ul>
+        )}
       </div>
 
-      <div className="employee-report">
-        {selectedEmployeeId ? (
+      {/* Right: Report View */}
+      <div className="employee-report" style={{ flex: 2 }}>
+        {selectedEmployee ? (
           <>
-            <h2>{selectedEmployeeName}'s Monthly Report</h2>
+            <h2>{selectedEmployee.name || selectedEmployee.username}'s Monthly Report</h2>
+
             <input
               type="month"
-              value={month}
-              onChange={(e) => setMonth(e.target.value)}
               className="daily-input"
+              value={month}
+              onChange={e => setMonth(e.target.value)}
+              style={{ marginBottom: '1rem' }}
             />
-            <table className="daily-table">
-              <thead>
-                <tr>
-                  <th className="daily-th">Date</th>
-                  <th className="daily-th" style={{ width: '70%' }}>Task</th>
-                  <th className="daily-th">Status</th>
-                </tr>
-              </thead>
-              <tbody>
-                {reports.length > 0 ? (
-                  reports.map((report, idx) => (
-                    <tr key={idx} className={report.status}>
-                      <td className="daily-td">{report.date}</td>
-                      <td className="daily-td">{report.task}</td>
-                      <td className="daily-td">{report.status}</td>
+
+            {loadingReports ? (
+              <p>Loading reports...</p>
+            ) : errorReports ? (
+              <p className="error">{errorReports}</p>
+            ) : reports.length === 0 ? (
+              <p>No reports found for this month.</p>
+            ) : (
+              <table className="daily-table">
+                <thead>
+                  <tr>
+                    <th>Date</th>
+                    <th>Task</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {reports.map((report, idx) => (
+                    <tr key={idx} className={report.status === 'completed' ? 'completed' : 'pending'}>
+                      <td>{new Date(report.date).toLocaleDateString()}</td>
+                      <td>{report.task}</td>
+                      <td>{report.status}</td>
                     </tr>
-                  ))
-                ) : (
-                  <tr><td colSpan="3" className="daily-td">No reports found.</td></tr>
-                )}
-              </tbody>
-            </table>
+                  ))}
+                </tbody>
+              </table>
+            )}
           </>
         ) : (
-          <h2>Select an employee to view reports</h2>
+          <p>Please select an employee to view reports.</p>
         )}
       </div>
     </div>

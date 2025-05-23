@@ -38,6 +38,9 @@ app.use('/api/employees', employeeRoutes);
 const leaveRoutes = require('./routes/leaveRoutes');
 app.use('/api/leaves', leaveRoutes);
 
+//reports management
+const reportRoutes = require('./routes/reportRoutes');
+app.use('/api/reports', reportRoutes);
 // Start Server
 app.listen(8082, () => {
   console.log('server is running on port 8082');

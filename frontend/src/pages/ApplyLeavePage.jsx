@@ -5,7 +5,7 @@ import axios from 'axios';
 const BASE_URL = 'http://localhost:8082';
 
 const ApplyLeavePage = () => {
-  const userId = localStorage.getItem('id'); // get employeeId from localStorage
+  const userId = localStorage.getItem('empid'); // get employeeId from localStorage
 
   const [formData, setFormData] = useState({
     name: '',

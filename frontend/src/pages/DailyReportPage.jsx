@@ -1,33 +1,85 @@
-// DailyReportPage.jsx
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import './DailyReportPage.css';
+import axios from 'axios';
+
+const BASE_URL = 'http://localhost:8082';
 
 const DailyReportPage = () => {
-  const [month, setMonth] = useState('2025-04');
+  // Get either selected employee ID or current user's ID
+  const selectedEmpId = localStorage.getItem('selectedEmpId');
+  const currentEmpId = localStorage.getItem('id');
+  const employeeId = selectedEmpId || currentEmpId;
+
+  const [month, setMonth] = useState(() => {
+    const now = new Date();
+    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+  });
+
   const [reports, setReports] = useState([]);
   const [form, setForm] = useState({ date: '', task: '', status: 'completed' });
+
+  const fetchReports = async () => {
+    if (!employeeId) return;
+    try {
+      const res = await axios.get(`${BASE_URL}/api/reports/my`, {
+        params: { month, employeeId }
+      });
+      setReports(res.data);
+    } catch (err) {
+      console.error('Error fetching reports:', err);
+    }
+  };
+
+  useEffect(() => {
+    fetchReports();
+  }, [month, employeeId]);
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    setReports([...reports, form]);
-    setForm({ date: '', task: '', status: 'completed' });
-  };
+    try {
+      const idToUse = localStorage.getItem('id'); // only allow submitting for logged-in user
+      if (!idToUse) {
+        alert('Employee ID not found in localStorage');
+        return;
+      }
 
-  const filteredReports = reports.filter((r) => r.date.startsWith(month));
+      const res = await fetch(`${BASE_URL}/api/reports`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ...form,
+          date: new Date(form.date),
+          employeeId: idToUse
+        })
+      });
+
+      const result = await res.json();
+      if (res.ok) {
+        alert('Report submitted!');
+        setForm({ date: '', task: '', status: 'completed' });
+        fetchReports(); // refetch to show updated data
+      } else {
+        alert(result.error || 'Submission failed');
+      }
+    } catch (err) {
+      console.error('Error submitting report:', err);
+      alert('Something went wrong');
+    }
+  };
 
   return (
     <>
-  <img src="/assets/images/bgApplyleave.jpg" alt="background" className="background-leave" />
+      <img src="/assets/images/bgApplyleave.jpg" alt="background" className="background-leave" />
       <div className="daily-report-container">
         <div className="left-form" style={{ flex: '0.3' }}>
           <h2>Submit Daily Task</h2>
           <form onSubmit={handleSubmit}>
             <input
-            className="daily-input"
+              className="daily-input"
               type="date"
               name="date"
               value={form.date}
@@ -35,7 +87,7 @@ const DailyReportPage = () => {
               required
             />
             <textarea
-            className="daily-input"
+              className="daily-input"
               name="task"
               value={form.task}
               onChange={handleChange}
@@ -54,7 +106,7 @@ const DailyReportPage = () => {
         <div className="right-report" style={{ flex: '0.7' }}>
           <h2>Monthly Report</h2>
           <input
-          className="daily-input"
+            className="daily-input"
             type="month"
             value={month}
             onChange={(e) => setMonth(e.target.value)}
@@ -68,9 +120,9 @@ const DailyReportPage = () => {
               </tr>
             </thead>
             <tbody>
-              {filteredReports.map((report, index) => (
+              {reports.map((report, index) => (
                 <tr key={index} className={report.status === 'completed' ? 'completed' : 'pending'}>
-                  <td className="daily-td">{report.date}</td>
+                  <td className="daily-td">{new Date(report.date).toLocaleDateString()}</td>
                   <td className="daily-td">{report.task}</td>
                   <td className="daily-td">{report.status}</td>
                 </tr>

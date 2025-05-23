@@ -2,25 +2,39 @@
   display: flex;
   padding: 20px;
   gap: 20px;
+  min-height: 100vh; /* Full viewport height for vertical centering */
+  box-sizing: border-box;
+  justify-content: center; /* center horizontally */
+  align-items: flex-start; /* align top */
+  background-color: #121212; /* optional dark background */
+  color: white;
+  font-family: Arial, sans-serif;
 }
 
+/* Employee List Panel */
 .employee-list {
   flex: 0.3;
-  background-color: #f4f4f4;
-  padding: 15px;
+  background-color: #1e1e1ea8; /* dark translucent */
+  padding: 20px;
   border-radius: 10px;
+  box-sizing: border-box;
+  max-width: 350px;
+  color: white;
 }
 
 .employee-list ul {
   list-style: none;
   padding: 0;
+  margin: 0;
 }
 
 .employee-list li {
   padding: 10px;
   border-radius: 5px;
-  margin-bottom: 5px;
+  margin-bottom: 8px;
   cursor: pointer;
+  background-color: #2c2c2c;
+  transition: background-color 0.3s, color 0.3s;
 }
 
 .employee-list li:hover,
@@ -29,6 +43,82 @@
   color: white;
 }
 
+/* Employee Report Panel */
 .employee-report {
   flex: 0.7;
+  background-color: #1e1e1ea8; /* dark translucent */
+  padding: 20px;
+  border-radius: 10px;
+  box-sizing: border-box;
+  max-width: 700px;
+  color: white;
+}
+
+/* Inputs and table */
+.daily-input {
+  width: 100%;
+  margin: 10px 0;
+  padding: 10px;
+  border: none;
+  border-radius: 5px;
+  background-color: #2c2c2c;
+  color: #fff;
+  box-sizing: border-box;
+  font-family: inherit;
+  font-size: 1rem;
+}
+
+.daily-table {
+  width: 100%;
+  margin-top: 20px;
+  border-collapse: collapse;
+}
+
+.daily-table th,
+.daily-table td {
+  padding: 10px;
+  border: 1px solid #333;
+  text-align: left;
+}
+
+.completed {
+  background-color: #2e7d32; /* green */
+  color: #fff;
+}
+
+.pending {
+  background-color: #b71c1c; /* red */
+  color: #fff;
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+  .reports-page {
+    flex-direction: column;
+    padding: 15px;
+    align-items: center; /* center horizontally */
+    min-height: auto;
+  }
+
+  .employee-list,
+  .employee-report {
+    width: 100%;
+    max-width: 450px;
+    margin-bottom: 15px;
+    padding: 15px;
+    border-radius: 15px;
+  }
+
+  .daily-input {
+    font-size: 16px;
+  }
+
+  .daily-table {
+    font-size: 14px;
+  }
+
+  /* Make report table scrollable horizontally on small screens */
+  .employee-report {
+    overflow-x: auto;
+  }
 }
