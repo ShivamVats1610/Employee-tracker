@@ -5,6 +5,8 @@ const HrDashboard = () => {
   const navigate = useNavigate();
 
   return (
+    <>
+    <img src="/assets/images/bgApplyleave.jpg" alt="background" className="background-leave-hr" />
     <div className="dashboard-container">
       <h1>👋 Welcome to HR Dashboard</h1>
       <div className="dashboard-cards">
@@ -22,6 +24,7 @@ const HrDashboard = () => {
         </div>
       </div>
     </div>
+    </>
   );
 };
 

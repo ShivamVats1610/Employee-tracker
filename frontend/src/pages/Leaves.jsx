@@ -1,7 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import './Leaves.css';
 import axios from 'axios';
+
 const BASE_URL = 'http://localhost:8082';
+
 const HRLeavePage = () => {
   const [leaveRequests, setLeaveRequests] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -41,7 +43,7 @@ const HRLeavePage = () => {
   const handleNotApprove = async (id) => {
     setProcessingId(id);
     try {
-      await axios.post(`/api/leaves/reject/${id}`);
+      await axios.post(`${BASE_URL}/api/leaves/reject/${id}`);
       setLeaveRequests((prev) => prev.filter((request) => request._id !== id));
     } catch (err) {
       console.error('Error rejecting leave:', err);
@@ -55,6 +57,8 @@ const HRLeavePage = () => {
   if (error) return <p className="error">{error}</p>;
 
   return (
+    <>
+    <img src="/assets/images/bgApplyleave.jpg" alt="background" className="background-leave-hr" />
     <div className="hr-leave-container">
       <h2>Employee Leave Requests</h2>
       {leaveRequests.length === 0 ? (
@@ -67,6 +71,7 @@ const HRLeavePage = () => {
             <div className="column header" role="columnheader">Phone</div>
             <div className="column header" role="columnheader">Leave Date</div>
             <div className="column header" role="columnheader">Reason</div>
+            <div className="column header" role="columnheader">Document</div>
             <div className="column header" role="columnheader">Actions</div>
           </div>
           <div role="rowgroup">
@@ -79,6 +84,17 @@ const HRLeavePage = () => {
                   {new Date(request.date).toLocaleDateString()}
                 </div>
                 <div className="column" role="cell">{request.reason}</div>
+                <div className="column" role="cell">
+                  {request.documentUrl ? (
+                    <img
+                      src={request.documentUrl}
+                      alt="Leave document"
+                      className="document-preview"
+                    />
+                  ) : (
+                    <span>No document</span>
+                  )}
+                </div>
                 <div className="column actions" role="cell">
                   <button
                     onClick={() => handleApprove(request._id)}
@@ -101,6 +117,7 @@ const HRLeavePage = () => {
         </div>
       )}
     </div>
+    </>
   );
 };
 
