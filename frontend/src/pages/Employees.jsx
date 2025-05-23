@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
+import ClipLoader from 'react-spinners/ClipLoader';
 import './Employees.css';
 
 const Employees = () => {
   const [employees, setEmployees] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [showForm, setShowForm] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [formData, setFormData] = useState({
     username: '',
     password: '',
@@ -13,13 +15,16 @@ const Employees = () => {
   });
 
   const fetchEmployees = async () => {
+    setLoading(true);
     try {
       const response = await fetch('http://localhost:8082/api/employees');
       const data = await response.json();
-      setEmployees(data);
+      const employeeOnly = data.filter(emp => emp.role === 'Employee');
+      setEmployees(employeeOnly);
     } catch (err) {
       console.error('Failed to fetch employees:', err);
     }
+    setLoading(false);
   };
 
   useEffect(() => {
@@ -81,7 +86,7 @@ const Employees = () => {
 
   return (
     <div className="employees-container">
-      <div className="header">
+      <div className="header-employees">
         <h2>Manage Employees</h2>
         <div className="actions">
           <input
@@ -95,71 +100,76 @@ const Employees = () => {
         </div>
       </div>
 
-      <table className="employee-table">
-        <thead>
-          <tr>
-            <th>Username</th>
-            <th>Role</th>
-            <th>Working Days</th>
-            <th>Leave Days</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {filteredEmployees.map((emp, idx) => (
-            <tr key={idx}>
-              <td>{emp.username}</td>
-              <td>{emp.role}</td>
-              <td>{emp.workingDays}</td>
-              <td>{emp.leaveDays}</td>
-              <td>
-                <button className="delete-btn" onClick={() => handleDelete(emp.username)}>Remove</button>
-              </td>
+      {loading ? (
+        <div style={{ display: 'flex', justifyContent: 'center', marginTop: '3rem' }}>
+          <ClipLoader color="#4fa94d" size={50} />
+        </div>
+      ) : (
+        <table className="employee-table">
+          <thead>
+            <tr>
+              <th>Username</th>
+              <th>Role</th>
+              <th>Working Days</th>
+              <th>Leave Days</th>
+              <th>Actions</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {filteredEmployees.map((emp, idx) => (
+              <tr key={idx}>
+                <td>{emp.username}</td>
+                <td>{emp.role}</td>
+                <td>{emp.workingDays}</td>
+                <td>{emp.leaveDays}</td>
+                <td>
+                  <button className="delete-btn" onClick={() => handleDelete(emp.username)}>Remove</button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
 
       {showForm && (
-  <div className="overlay">
-    <div className="card-popup">
-      <h3>Add New Employee</h3>
-      <form onSubmit={handleAddEmployee} className="form">
-        <input
-          type="text"
-          placeholder="Username"
-          value={formData.username}
-          onChange={(e) => setFormData({ ...formData, username: e.target.value })}
-        />
-        <input
-          type="password"
-          placeholder="Password"
-          value={formData.password}
-          onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-        />
-        <input
-          type="password"
-          placeholder="Confirm Password"
-          value={formData.confirmPassword}
-          onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
-        />
-        <select
-          value={formData.role}
-          onChange={(e) => setFormData({ ...formData, role: e.target.value })}
-        >
-          <option value="Employee">Employee</option>
-          <option value="HR">HR</option>
-          <option value="Admin">Admin</option>
-        </select>
-        <div className="popup-buttons">
-          <button type="submit" className="submit-btn">Add</button>
-          <button type="button" className="cancel-btn" onClick={() => setShowForm(false)}>Cancel</button>
+        <div className="overlay">
+          <div className="card-popup">
+            <h3>Add New Employee</h3>
+            <form onSubmit={handleAddEmployee} className="form">
+              <input
+                type="text"
+                placeholder="Username"
+                value={formData.username}
+                onChange={(e) => setFormData({ ...formData, username: e.target.value })}
+              />
+              <input
+                type="password"
+                placeholder="Password"
+                value={formData.password}
+                onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+              />
+              <input
+                type="password"
+                placeholder="Confirm Password"
+                value={formData.confirmPassword}
+                onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
+              />
+              <select
+                value={formData.role}
+                onChange={(e) => setFormData({ ...formData, role: e.target.value })}
+              >
+                <option value="Employee">Employee</option>
+                <option value="HR">HR</option>
+                <option value="Admin">Admin</option>
+              </select>
+              <div className="popup-buttons">
+                <button type="submit" className="submit-btn">Add</button>
+                <button type="button" className="cancel-btn" onClick={() => setShowForm(false)}>Cancel</button>
+              </div>
+            </form>
+          </div>
         </div>
-      </form>
-    </div>
-  </div>
-)}
-
+      )}
     </div>
   );
 };

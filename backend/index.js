@@ -12,7 +12,7 @@ app.use(express.json());
 // DB Connection
 connectDB();
 
-// ✅ Serve uploaded images statically
+// upload profile image
 app.use('/api/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Routes
@@ -28,6 +28,15 @@ app.post('/api/checkout', (req, res) => {
   console.log('Employee checked-out.');
   res.send({ message: 'Check-out successful!' });
 });
+
+// manage employees
+const employeeRoutes = require('./routes/employeeRoutes');
+
+app.use('/api/employees', employeeRoutes);
+
+// leave management
+const leaveRoutes = require('./routes/leaveRoutes');
+app.use('/api/leaves', leaveRoutes);
 
 // Start Server
 app.listen(8082, () => {

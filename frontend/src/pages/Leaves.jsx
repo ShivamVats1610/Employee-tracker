@@ -1,66 +1,105 @@
 import React, { useEffect, useState } from 'react';
 import './Leaves.css';
 import axios from 'axios';
-
+const BASE_URL = 'http://localhost:8082';
 const HRLeavePage = () => {
   const [leaveRequests, setLeaveRequests] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [processingId, setProcessingId] = useState(null); // Track request being processed
 
   useEffect(() => {
     const fetchLeaveRequests = async () => {
       try {
-        const response = await axios.get('/api/leaves/requests');
+        setLoading(true);
+        const response = await axios.get(`${BASE_URL}/api/leaves/requests`);
         setLeaveRequests(response.data);
-      } catch (error) {
-        console.error('Error fetching leave requests:', error);
+        setError(null);
+      } catch (err) {
+        console.error('Error fetching leave requests:', err);
+        setError('Failed to load leave requests.');
+      } finally {
+        setLoading(false);
       }
     };
     fetchLeaveRequests();
   }, []);
 
   const handleApprove = async (id) => {
+    setProcessingId(id);
     try {
-      await axios.post(`/api/leaves/approve/${id}`);
-      setLeaveRequests(leaveRequests.filter(request => request.id !== id)); // Remove approved request
-    } catch (error) {
-      console.error('Error approving leave:', error);
+      await axios.post(`${BASE_URL}/api/leaves/approve/${id}`);
+      setLeaveRequests((prev) => prev.filter((request) => request._id !== id));
+    } catch (err) {
+      console.error('Error approving leave:', err);
+      alert('Failed to approve leave.');
+    } finally {
+      setProcessingId(null);
     }
   };
 
   const handleNotApprove = async (id) => {
+    setProcessingId(id);
     try {
       await axios.post(`/api/leaves/reject/${id}`);
-      setLeaveRequests(leaveRequests.filter(request => request.id !== id)); // Remove rejected request
-    } catch (error) {
-      console.error('Error rejecting leave:', error);
+      setLeaveRequests((prev) => prev.filter((request) => request._id !== id));
+    } catch (err) {
+      console.error('Error rejecting leave:', err);
+      alert('Failed to reject leave.');
+    } finally {
+      setProcessingId(null);
     }
   };
+
+  if (loading) return <p>Loading leave requests...</p>;
+  if (error) return <p className="error">{error}</p>;
 
   return (
     <div className="hr-leave-container">
       <h2>Employee Leave Requests</h2>
-      <div className="leave-table">
-        <div className="table-header">
-          <div className="column">Employee Name</div>
-          <div className="column">Employee ID</div>
-          <div className="column">Phone</div>
-          <div className="column">Leave Date</div>
-          <div className="column">Reason</div>
-          <div className="column">Actions</div>
-        </div>
-        {leaveRequests.map(request => (
-          <div className="table-row" key={request.id}>
-            <div className="column">{request.name}</div>
-            <div className="column">{request.employeeId}</div>
-            <div className="column">{request.phone}</div>
-            <div className="column">{request.date}</div>
-            <div className="column">{request.reason}</div>
-            <div className="column actions">
-              <button onClick={() => handleApprove(request.id)}>Approve</button>
-              <button onClick={() => handleNotApprove(request.id)}>Reject</button>
-            </div>
+      {leaveRequests.length === 0 ? (
+        <p>No leave requests found.</p>
+      ) : (
+        <div className="leave-table" role="table" aria-label="Leave Requests">
+          <div className="table-header" role="rowgroup">
+            <div className="column header" role="columnheader">Employee Name</div>
+            <div className="column header" role="columnheader">Employee ID</div>
+            <div className="column header" role="columnheader">Phone</div>
+            <div className="column header" role="columnheader">Leave Date</div>
+            <div className="column header" role="columnheader">Reason</div>
+            <div className="column header" role="columnheader">Actions</div>
           </div>
-        ))}
-      </div>
+          <div role="rowgroup">
+            {leaveRequests.map((request) => (
+              <div className="table-row" role="row" key={request._id}>
+                <div className="column" role="cell">{request.name}</div>
+                <div className="column" role="cell">{request.employeeId}</div>
+                <div className="column" role="cell">{request.phone}</div>
+                <div className="column" role="cell">
+                  {new Date(request.date).toLocaleDateString()}
+                </div>
+                <div className="column" role="cell">{request.reason}</div>
+                <div className="column actions" role="cell">
+                  <button
+                    onClick={() => handleApprove(request._id)}
+                    aria-label={`Approve leave for ${request.name}`}
+                    disabled={processingId === request._id}
+                  >
+                    Approve
+                  </button>
+                  <button
+                    onClick={() => handleNotApprove(request._id)}
+                    aria-label={`Reject leave for ${request.name}`}
+                    disabled={processingId === request._id}
+                  >
+                    Reject
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 };
