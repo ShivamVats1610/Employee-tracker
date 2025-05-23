@@ -3,29 +3,31 @@
     const bcrypt = require('bcryptjs');
 
     exports.registerUser = async (req, res) => {
-    let { username, password, role } = req.body;
+    let { id, username, password, role } = req.body;
 
     try {
         const existingUser = await User.findOne({ username });
         if (existingUser)
-        return res.status(400).json({ message: 'User already exists' });
+            return res.status(400).json({ message: 'User already exists' });
+
+        const existingId = await User.findOne({ id });
+        if (existingId)
+            return res.status(400).json({ message: 'ID already exists. Try again.' });
 
         const hashedPassword = await bcrypt.hash(password, 10);
 
-        // Normalize role
         const allowedRoles = ['HR', 'Admin', 'Employee'];
-
-        // Convert input role to match enum values
-        role = role.trim().toLowerCase(); // "hr"
+        role = role.trim().toLowerCase();
         if (role === 'hr') role = 'HR';
         else if (role === 'admin') role = 'Admin';
         else if (role === 'employee') role = 'Employee';
         else return res.status(400).json({ message: 'Invalid role provided' });
 
         const newUser = new User({
-        username,
-        password: hashedPassword,
-        role
+            id,
+            username,
+            password: hashedPassword,
+            role
         });
 
         await newUser.save();
@@ -33,7 +35,8 @@
     } catch (error) {
         res.status(500).json({ message: 'Server error', error });
     }
-    };
+};
+
 
 
     exports.loginUser = async (req, res) => {

@@ -33,12 +33,19 @@ const LoginForm = ({ onLogin }) => {
       : 'http://localhost:8082/api/auth/login';
 
     try {
+      const id = `emp-${Math.floor(1000 + Math.random() * 9000)}`;
+
       const response = await fetch(url, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ username, password, role: capitalizedRole }),
+        body: JSON.stringify({
+          username,
+          password,
+          role: capitalizedRole,
+          ...(isRegister && { id }), // only add id if registering
+        }),
       });
 
       const data = await response.json();
@@ -49,15 +56,12 @@ const LoginForm = ({ onLogin }) => {
         enqueueSnackbar(data.message, { variant: 'success' });
 
         if (!isRegister) {
-          // Save basic info
           localStorage.setItem('id', data.user._id);
           localStorage.setItem('role', data.user.role);
 
-          // Fetch full profile info after login
           const profileRes = await fetch(`http://localhost:8082/api/auth/profile/${data.user._id}`);
           const profileData = await profileRes.json();
 
-          // Save profile info to localStorage for persistence
           localStorage.setItem('username', profileData.name || data.user.username);
           if (profileData.profileImage) {
             localStorage.setItem('profileImg', `http://localhost:8082/api/uploads/${profileData.profileImage}`);
