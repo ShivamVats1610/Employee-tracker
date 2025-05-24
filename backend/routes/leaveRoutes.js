@@ -1,9 +1,10 @@
+// routes/leaveRoutes.js
 const express = require('express');
 const router = express.Router();
 const uploadLeaveDocs = require('../middlewares/uploadLeaveDocs');
 const Leave = require('../models/Leave');
 
-// POST /api/leaves/apply
+// Apply for leave
 router.post('/apply', uploadLeaveDocs.single('document'), async (req, res) => {
   try {
     const { name, employeeId, phone, reason, date } = req.body;
@@ -16,18 +17,18 @@ router.post('/apply', uploadLeaveDocs.single('document'), async (req, res) => {
       reason,
       date,
       document,
-      status: 'Pending' // optional, since default is Pending in schema
+      status: 'Pending'
     });
 
     await leave.save();
     res.status(201).json({ message: 'Leave applied successfully', leave });
   } catch (error) {
     console.error('Error applying leave:', error);
-    res.status(500).json({ error: error.message || 'Error applying leave' });
+    res.status(500).json({ error: 'Error applying leave' });
   }
 });
 
-// GET /api/leaves/apply/:employeeId
+// Get all leave requests by employee
 router.get('/apply/:employeeId', async (req, res) => {
   try {
     const leaves = await Leave.find({ employeeId: req.params.employeeId }).sort({ date: -1 });
@@ -37,7 +38,8 @@ router.get('/apply/:employeeId', async (req, res) => {
     res.status(500).json({ error: 'Error fetching leave requests' });
   }
 });
-// GET all pending leave requests (for HR)
+
+// Get all pending leave requests (for HR)
 router.get('/requests', async (req, res) => {
   try {
     const leaves = await Leave.find({ status: 'Pending' }).sort({ date: -1 });
@@ -48,7 +50,7 @@ router.get('/requests', async (req, res) => {
   }
 });
 
-// POST approve leave
+// Approve leave
 router.post('/approve/:id', async (req, res) => {
   try {
     await Leave.findByIdAndUpdate(req.params.id, { status: 'Approved' });
@@ -59,7 +61,7 @@ router.post('/approve/:id', async (req, res) => {
   }
 });
 
-// POST reject leave
+// Reject leave
 router.post('/reject/:id', async (req, res) => {
   try {
     await Leave.findByIdAndUpdate(req.params.id, { status: 'Rejected' });
@@ -69,6 +71,5 @@ router.post('/reject/:id', async (req, res) => {
     res.status(500).json({ error: 'Error rejecting leave' });
   }
 });
-
 
 module.exports = router;

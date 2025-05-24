@@ -1,0 +1,88 @@
+/* Background image */
+.background-checkin {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  object-fit: cover;
+  z-index: -2;
+}
+
+/* Overlay to darken background */
+.overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.6);
+  z-index: -1;
+}
+
+/* Container box */
+.checkin-container {
+  max-width: 400px;
+  margin: 5vh auto;
+  padding: 20px 30px;
+  background-color: rgba(0, 0, 0, 0.75);
+  border-radius: 15px;
+  color: white;
+  text-align: center;
+  box-shadow: 0 0 20px #000;
+}
+
+/* Location status text */
+.location-status {
+  font-size: 1rem;
+  margin-bottom: 20px;
+}
+
+.location-status.in-office {
+  color: #4CAF50; /* green */
+}
+
+.location-status.out-office {
+  color: #f44336; /* red */
+}
+
+/* Buttons styling */
+.check-btn {
+  background-color: #2196F3;
+  border: none;
+  padding: 12px 24px;
+  margin: 6px;
+  border-radius: 8px;
+  color: white;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.check-btn:disabled {
+  background-color: #777;
+  cursor: not-allowed;
+}
+
+.check-btn:hover:not(:disabled) {
+  background-color: #1769aa;
+}
+
+/* Text color helper */
+.text-white {
+  color: white;
+  margin-bottom: 15px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 480px) {
+  .checkin-container {
+    width: 90%;
+    padding: 15px;
+  }
+
+  video, img {
+    width: 100% !important;
+    height: auto !important;
+  }
+}

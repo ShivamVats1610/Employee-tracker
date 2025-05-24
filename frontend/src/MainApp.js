@@ -14,6 +14,7 @@ import AdminDashboard from './pages/AdminDashboard.jsx';
 import HRDashboard from './pages/HrDashboard.jsx';
 import EditProfile from './components/EditProfile/EditProfile';
 import AllReportsPage from './pages/ReportsPage';
+import FaceCheckIn from './components/FaceCheckIn';
 
 const MainApp = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -35,9 +36,7 @@ const MainApp = () => {
   };
 
   const renderDashboard = (component) => (
-    <DashboardLayout role={userRole}>
-      {component}
-    </DashboardLayout>
+    <DashboardLayout role={userRole}>{component}</DashboardLayout>
   );
 
   return (
@@ -91,27 +90,25 @@ const MainApp = () => {
       <Route
         path="/edit-profile"
         element={
-          isAuthenticated
-            ? <EditProfile userRole={userRole} />
-            : <Navigate to="/" replace />
+          isAuthenticated ? (
+            <EditProfile userRole={userRole} />
+          ) : (
+            <Navigate to="/" replace />
+          )
         }
       />
 
       <Route
         path="/check-in-out"
         element={
-          isAuthenticated
-            ? renderDashboard(<CheckInOutPage />)
-            : <Navigate to="/" replace />
+          isAuthenticated ? renderDashboard(<CheckInOutPage />) : <Navigate to="/" replace />
         }
       />
 
       <Route
         path="/apply-leave"
         element={
-          isAuthenticated
-            ? renderDashboard(<ApplyLeavePage />)
-            : <Navigate to="/" replace />
+          isAuthenticated ? renderDashboard(<ApplyLeavePage />) : <Navigate to="/" replace />
         }
       />
 
@@ -126,20 +123,12 @@ const MainApp = () => {
 
       <Route
         path="/leaves"
-        element={
-          isAuthenticated
-            ? renderDashboard(<Leaves />)
-            : <Navigate to="/" replace />
-        }
+        element={isAuthenticated ? renderDashboard(<Leaves />) : <Navigate to="/" replace />}
       />
 
       <Route
         path="/daily-report"
-        element={
-          isAuthenticated
-            ? renderDashboard(<Reports />)
-            : <Navigate to="/" replace />
-        }
+        element={isAuthenticated ? renderDashboard(<Reports />) : <Navigate to="/" replace />}
       />
 
       <Route
@@ -153,16 +142,18 @@ const MainApp = () => {
 
       <Route
         path="/calendar"
-        element={
-          isAuthenticated
-            ? renderDashboard(<Calendar />)
-            : <Navigate to="/" replace />
-        }
+        element={isAuthenticated ? renderDashboard(<Calendar />) : <Navigate to="/" replace />}
+      />
+
+      {/* FaceCheckIn Route */}
+      <Route
+        path="/face-checkin"
+        element={isAuthenticated ? renderDashboard(<FaceCheckIn />) : <Navigate to="/" replace />}
       />
 
       <Route path="/unauthorized" element={<h2>Unauthorized Access</h2>} />
 
-      {/* Catch-all 404 route */}
+      {/* Catch-all 404 */}
       <Route path="*" element={<h2>Page Not Found</h2>} />
     </Routes>
   );

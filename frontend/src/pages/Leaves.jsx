@@ -8,7 +8,7 @@ const HRLeavePage = () => {
   const [leaveRequests, setLeaveRequests] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [processingId, setProcessingId] = useState(null); // Track request being processed
+  const [processingId, setProcessingId] = useState(null);
 
   useEffect(() => {
     const fetchLeaveRequests = async () => {
@@ -53,70 +53,76 @@ const HRLeavePage = () => {
     }
   };
 
+  // ✅ Helper function for document URL
+  const getFullDocumentPath = (docPath) => {
+    return docPath ? `http://localhost:8082/uploads/leaveDocs/${docPath}` : null;
+  };
+
+
   if (loading) return <p>Loading leave requests...</p>;
   if (error) return <p className="error">{error}</p>;
 
   return (
     <>
-    <img src="/assets/images/bgApplyleave.jpg" alt="background" className="background-leave-hr" />
-    <div className="hr-leave-container">
-      <h2>Employee Leave Requests</h2>
-      {leaveRequests.length === 0 ? (
-        <p>No leave requests found.</p>
-      ) : (
-        <div className="leave-table" role="table" aria-label="Leave Requests">
-          <div className="table-header" role="rowgroup">
-            <div className="column header" role="columnheader">Employee Name</div>
-            <div className="column header" role="columnheader">Employee ID</div>
-            <div className="column header" role="columnheader">Phone</div>
-            <div className="column header" role="columnheader">Leave Date</div>
-            <div className="column header" role="columnheader">Reason</div>
-            <div className="column header" role="columnheader">Document</div>
-            <div className="column header" role="columnheader">Actions</div>
+      <img src="/assets/images/bgApplyleave.jpg" alt="background" className="background-leave-hr" />
+      <div className="hr-leave-container">
+        <h2>Employee Leave Requests</h2>
+        {leaveRequests.length === 0 ? (
+          <p>No leave requests found.</p>
+        ) : (
+          <div className="leave-table" role="table" aria-label="Leave Requests">
+            <div className="table-header" role="rowgroup">
+              <div className="column header" role="columnheader">Employee Name</div>
+              <div className="column header" role="columnheader">Employee ID</div>
+              <div className="column header" role="columnheader">Phone</div>
+              <div className="column header" role="columnheader">Leave Date</div>
+              <div className="column header" role="columnheader">Reason</div>
+              <div className="column header" role="columnheader">Document</div>
+              <div className="column header" role="columnheader">Actions</div>
+            </div>
+            <div role="rowgroup">
+              {leaveRequests.map((request) => (
+                <div className="table-row" role="row" key={request._id}>
+                  <div className="column" role="cell">{request.name}</div>
+                  <div className="column" role="cell">{request.employeeId}</div>
+                  <div className="column" role="cell">{request.phone}</div>
+                  <div className="column" role="cell">
+                    {new Date(request.date).toLocaleDateString()}
+                  </div>
+                  <div className="column" role="cell">{request.reason}</div>
+                  <div className="column" role="cell">
+                    {request.document ? (
+                      <img
+                        src={`http://localhost:8082/uploads/leaveDocs/${request.document}`}
+                        alt="Leave document"
+                        className="document-preview"
+                      />
+                    ) : (
+                      <span>No document</span>
+                    )}
+                  </div>
+                  <div className="column actions" role="cell">
+                    <button
+                      onClick={() => handleApprove(request._id)}
+                      aria-label={`Approve leave for ${request.name}`}
+                      disabled={processingId === request._id}
+                    >
+                      Approve
+                    </button>
+                    <button
+                      onClick={() => handleNotApprove(request._id)}
+                      aria-label={`Reject leave for ${request.name}`}
+                      disabled={processingId === request._id}
+                    >
+                      Reject
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
-          <div role="rowgroup">
-            {leaveRequests.map((request) => (
-              <div className="table-row" role="row" key={request._id}>
-                <div className="column" role="cell">{request.name}</div>
-                <div className="column" role="cell">{request.employeeId}</div>
-                <div className="column" role="cell">{request.phone}</div>
-                <div className="column" role="cell">
-                  {new Date(request.date).toLocaleDateString()}
-                </div>
-                <div className="column" role="cell">{request.reason}</div>
-                <div className="column" role="cell">
-                  {request.documentUrl ? (
-                    <img
-                      src={request.documentUrl}
-                      alt="Leave document"
-                      className="document-preview"
-                    />
-                  ) : (
-                    <span>No document</span>
-                  )}
-                </div>
-                <div className="column actions" role="cell">
-                  <button
-                    onClick={() => handleApprove(request._id)}
-                    aria-label={`Approve leave for ${request.name}`}
-                    disabled={processingId === request._id}
-                  >
-                    Approve
-                  </button>
-                  <button
-                    onClick={() => handleNotApprove(request._id)}
-                    aria-label={`Reject leave for ${request.name}`}
-                    disabled={processingId === request._id}
-                  >
-                    Reject
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-    </div>
+        )}
+      </div>
     </>
   );
 };

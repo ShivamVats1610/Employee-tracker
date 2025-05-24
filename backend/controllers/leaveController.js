@@ -4,7 +4,9 @@ const Leave = require('../models/Leave');
 exports.applyLeave = async (req, res) => {
   try {
     const { name, employeeId, phone, reason, date } = req.body;
-    const document = req.file ? req.file.filename : null;
+    const document = req.file
+  ? `${req.protocol}://${req.get('host')}/uploads/leaveDocs/${req.file.filename}`
+  : null;
 
     const newLeave = new Leave({
       name,
