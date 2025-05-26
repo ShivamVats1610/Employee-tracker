@@ -3,7 +3,7 @@ import axios from 'axios';
 import './CheckInOutPage.css';
 
 const CheckInOutPage = () => {
-  const [locationStatus, setLocationStatus] = useState('Fetching location...');
+  const [locationStatus, setLocationStatus] = useState('');
   const [isInOffice, setIsInOffice] = useState(false);
   const [checkInStatus, setCheckInStatus] = useState(false);
   const [checkOutStatus, setCheckOutStatus] = useState(false);
@@ -13,25 +13,44 @@ const CheckInOutPage = () => {
   const [loadingLocation, setLoadingLocation] = useState(true);
   const [loadingWebcam, setLoadingWebcam] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
+  const [profileImage, setProfileImage] = useState(null);
 
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
 
-  const officeCoordinates = { lat: 28.7041, lon: 77.1025 }; // Delhi coordinates
+  const officeCoordinates = { lat: 30.677056, lon: 76.748139 }; // Delhi
+  const MAX_DISTANCE_KM = 0.5;
+
+  // Check if running on localhost
+  const isLocalhost = ['localhost', '127.0.0.1'].includes(window.location.hostname);
 
   useEffect(() => {
-    if (
-      window.location.hostname === 'localhost' ||
-      window.location.hostname === '127.0.0.1'
-    ) {
-      setLocationStatus('Running on localhost: skipping location check.');
+    async function fetchProfileImage(filename) {
+      try {
+        const url = `http://localhost:8082/api/uploads/profileImages/${filename}`;
+        console.log("Fetching image URL:", url);
+        const response = await axios.get(url);
+        setProfileImage(response.data); // Set profile image here
+      } catch (error) {
+        console.error("Error fetching profile image:", error);
+      }
+    }
+
+    const userProfileImagePath = '1747638890833-497927884.jpg'; // replace accordingly
+    fetchProfileImage(userProfileImagePath);
+  }, []);
+
+  useEffect(() => {
+    if (isLocalhost) {
+      // Skip location check silently on localhost
       setIsInOffice(true);
       setLoadingLocation(false);
+      setLocationStatus('');
       return;
     }
 
     if (!navigator.geolocation) {
-      setLocationStatus('Geolocation is not supported by your browser.');
+      setLocationStatus('Geolocation not supported.');
       setLoadingLocation(false);
       return;
     }
@@ -41,56 +60,41 @@ const CheckInOutPage = () => {
         const { latitude: lat, longitude: lon } = position.coords;
         setLatitude(lat);
         setLongitude(lon);
-
-        const distance = calculateDistance(
-          officeCoordinates.lat,
-          officeCoordinates.lon,
-          lat,
-          lon
-        );
-
-        setIsInOffice(distance <= 1);
+        const distance = calculateDistance(officeCoordinates.lat, officeCoordinates.lon, lat, lon);
+        setIsInOffice(distance <= MAX_DISTANCE_KM);
         setLocationStatus(
-          distance <= 1
-            ? '✅ You are in the office area.'
-            : '❌ You are not in the office area.'
+          distance <= MAX_DISTANCE_KM ? '✅ You are in the office area.' : '❌ You are not in the office area.'
         );
         setLoadingLocation(false);
       },
-      (error) => {
-        setLocationStatus('Unable to retrieve your location.');
-        setIsInOffice(false);
+      (err) => {
+        setLocationStatus('❌ Unable to retrieve your location.');
         setLoadingLocation(false);
-        console.error('Geolocation error:', error);
+        console.error('Geolocation error:', err);
       },
       { timeout: 10000 }
     );
-  }, []);
+  }, [isLocalhost]);
 
   useEffect(() => {
     let stream;
-    if (navigator.mediaDevices?.getUserMedia) {
-      navigator.mediaDevices
-        .getUserMedia({ video: true })
-        .then((mediaStream) => {
-          stream = mediaStream;
-          if (videoRef.current) {
-            videoRef.current.srcObject = stream;
-            videoRef.current.onloadedmetadata = () => {
-              videoRef.current.play().catch(console.warn);
-            };
-          }
-          setLoadingWebcam(false);
-        })
-        .catch((err) => {
-          alert('Could not access webcam.');
-          setLoadingWebcam(false);
-          console.error('Webcam error:', err);
-        });
-    } else {
-      alert('Webcam not supported.');
-      setLoadingWebcam(false);
-    }
+    navigator.mediaDevices
+      .getUserMedia({ video: true })
+      .then((mediaStream) => {
+        stream = mediaStream;
+        if (videoRef.current) {
+          videoRef.current.srcObject = stream;
+          videoRef.current.onloadedmetadata = () => {
+            videoRef.current.play().catch(console.warn);
+          };
+        }
+        setLoadingWebcam(false);
+      })
+      .catch((err) => {
+        alert('❌ Could not access webcam.');
+        setLoadingWebcam(false);
+        console.error('Webcam error:', err);
+      });
 
     return () => {
       stream?.getTracks().forEach((track) => track.stop());
@@ -98,7 +102,7 @@ const CheckInOutPage = () => {
   }, []);
 
   const calculateDistance = (lat1, lon1, lat2, lon2) => {
-    const R = 6371; // km
+    const R = 6371; // Earth's radius in km
     const dLat = ((lat2 - lat1) * Math.PI) / 180;
     const dLon = ((lon2 - lon1) * Math.PI) / 180;
     const a =
@@ -113,11 +117,9 @@ const CheckInOutPage = () => {
     const video = videoRef.current;
     const canvas = canvasRef.current;
     if (!video || !canvas) return;
-
     const context = canvas.getContext('2d');
     canvas.width = video.videoWidth;
     canvas.height = video.videoHeight;
-
     context.drawImage(video, 0, 0, canvas.width, canvas.height);
     const dataURL = canvas.toDataURL('image/jpeg');
     setCapturedImage(dataURL);
@@ -133,65 +135,75 @@ const CheckInOutPage = () => {
   };
 
   const handleCheckIn = async () => {
-    if (!isInOffice || !capturedImage) {
-      alert('❌ Please ensure you are in the office and captured your image.');
+    if (!capturedImage || !profileImage) {
+      alert('❌ Ensure image is captured and profile image is loaded.');
       return;
     }
 
-    const now = new Date();
-    const hour = now.getHours();
-    const minutes = now.getMinutes();
-    const isLocalhost =
-      window.location.hostname === 'localhost' ||
-      window.location.hostname === '127.0.0.1';
-
-    if (!isLocalhost && (hour > 10 || (hour === 10 && minutes > 0))) {
-      alert('❌ Check-in not allowed after 10:00 AM.');
+    if (!isLocalhost && !isInOffice) {
+      alert('❌ Ensure you are in the office to check in.');
       return;
+    }
+
+    if (!isLocalhost) {
+      const now = new Date();
+      const hour = now.getHours();
+      const minutes = now.getMinutes();
+      if (hour > 10 || (hour === 10 && minutes > 0)) {
+        alert('❌ Check-in not allowed after 10:00 AM.');
+        return;
+      }
     }
 
     try {
       setIsLoading(true);
       const formData = new FormData();
-      formData.append('faceImage', dataURLtoBlob(capturedImage), 'face.jpg');
-      formData.append('latitude', latitude);
-      formData.append('longitude', longitude);
+      formData.append('faceImage', dataURLtoBlob(capturedImage), 'captured.jpg');
+      if (!isLocalhost) {
+        formData.append('latitude', latitude);
+        formData.append('longitude', longitude);
+      }
 
-      // Use full backend URL
-      const response = await axios.post('http://localhost:8082/api/attendance/checkin', formData);
+      const res = await axios.post('http://localhost:8082/api/attendance/check-in', formData, {
+        withCredentials: true,
+      });
 
-      if (response.status === 200) {
+      if (res.status === 200 && res.data.verified) {
         setCheckInStatus(true);
         alert('✅ Face verified. Check-in successful.');
       } else {
-        alert('❌ Check-in failed. Please try again.');
+        alert('❌ Face does not match profile. Check-in denied.');
       }
-    } catch (error) {
-      console.error('Check-in error:', error);
-      alert('❌ Something went wrong during check-in.');
+    } catch (err) {
+      console.error('Check-in error:', err);
+      alert('❌ Check-in failed.');
     } finally {
       setIsLoading(false);
     }
   };
 
   const handleCheckOut = async () => {
-    if (!isInOffice) {
-      alert('You must be in the office to check out.');
+    if (!isLocalhost && !isInOffice) {
+      alert('❌ You must be in the office to check out.');
       return;
     }
 
-    const now = new Date();
-    const hour = now.getHours();
-    const minutes = now.getMinutes();
-
-    if (hour < 19 || (hour === 19 && minutes < 30)) {
-      alert('❌ Check-out is allowed only after 7:30 PM.');
-      return;
+    if (!isLocalhost) {
+      const now = new Date();
+      const hour = now.getHours();
+      const minutes = now.getMinutes();
+      if (hour < 19 || (hour === 19 && minutes < 30)) {
+        alert('❌ Check-out is allowed only after 7:30 PM.');
+        return;
+      }
     }
 
     try {
       setIsLoading(true);
-      const res = await axios.post('http://localhost:8082/api/attendance/checkout');
+      const res = await axios.post('http://localhost:8082/api/attendance/check-out', null, {
+        withCredentials: true,
+      });
+
       if (res.status === 200) {
         setCheckOutStatus(true);
         alert('✅ Checked out successfully.');
@@ -211,9 +223,12 @@ const CheckInOutPage = () => {
 
       <div className="checkin-container">
         <h1 className="text-white">Employee Check-in / Check-out</h1>
-        <p className={`location-status ${isInOffice ? 'in-office' : 'out-office'}`}>
-          {loadingLocation ? 'Fetching location...' : locationStatus}
-        </p>
+        {/* Show location status only if NOT localhost */}
+        {!isLocalhost && (
+          <p className={`location-status ${isInOffice ? 'in-office' : 'out-office'}`}>
+            {loadingLocation ? 'Fetching location...' : locationStatus}
+          </p>
+        )}
 
         {loadingWebcam ? (
           <p>Loading webcam...</p>
@@ -222,9 +237,13 @@ const CheckInOutPage = () => {
             <video ref={videoRef} style={{ width: '320px', borderRadius: '12px' }} autoPlay muted playsInline />
             <div style={{ margin: '12px 0' }}>
               {!capturedImage ? (
-                <button class="check-btn" onClick={captureImage} disabled={!isInOffice || isLoading}>📸 Capture Face Image</button>
+                <button className="check-btn" onClick={captureImage} disabled={isLoading}>
+                  📸 Capture Face Image
+                </button>
               ) : (
-                <button class="check-btn"  onClick={() => setCapturedImage(null)} disabled={isLoading}>🔄 Retake Photo</button>
+                <button className="check-btn" onClick={() => setCapturedImage(null)} disabled={isLoading}>
+                  🔄 Retake Photo
+                </button>
               )}
             </div>
           </>
@@ -236,11 +255,26 @@ const CheckInOutPage = () => {
 
         <canvas ref={canvasRef} style={{ display: 'none' }} />
 
+        {profileImage && (
+          <>
+            <p className="text-white">👤 Profile Image</p>
+            <img src={profileImage} alt="Profile" style={{ width: '120px', borderRadius: '12px', marginBottom: '20px' }} />
+          </>
+        )}
+
         <div className="button-group">
-          <button class="check-btn"  className="checkin-btn" onClick={handleCheckIn} disabled={!isInOffice || !capturedImage || checkInStatus || isLoading}>
+          <button
+            className="checkin-btn check-btn"
+            onClick={handleCheckIn}
+            disabled={(!isLocalhost && !isInOffice) || !capturedImage || checkInStatus || isLoading}
+          >
             ✅ Check In
           </button>
-          <button class="check-btn"  className="checkout-btn" onClick={handleCheckOut} disabled={!isInOffice || checkOutStatus || isLoading}>
+          <button
+            className="checkout-btn check-btn"
+            onClick={handleCheckOut}
+            disabled={(!isLocalhost && !isInOffice) || checkOutStatus || isLoading}
+          >
             ✅ Check Out
           </button>
         </div>

@@ -7,9 +7,7 @@ const fs = require('fs').promises;
 const Attendance = require('../models/Attendance');
 const User = require('../models/User');
 
-// ==========================
 // Multer setup for check-in image upload
-// ==========================
 const checkinStorage = multer.diskStorage({
   destination: async (req, file, cb) => {
     try {
@@ -35,32 +33,26 @@ const fileFilter = (req, file, cb) => {
   if (extname && mimetype) {
     cb(null, true);
   } else {
-    cb(new multer.MulterError('LIMIT_UNEXPECTED_FILE', 'Only image files are allowed!'));
+    cb(new Error('Only image files are allowed!'));
   }
 };
 
 const upload = multer({ storage: checkinStorage, fileFilter });
 
-// ==========================
 // Office coordinates (Delhi example)
-// ==========================
 const officeLocation = {
-  latitude: 28.6129,
-  longitude: 77.2295,
+  latitude: 30.677056,
+  longitude: 76.748139,
 };
 
-// ==========================
 // Dummy Face Verification Function
-// ==========================
 async function verifyFace(profileImagePath, uploadedImagePath) {
   // Placeholder for actual face verification logic
   await new Promise(resolve => setTimeout(resolve, 500));
   return true;
 }
 
-// ==========================
 // Authentication Middleware Stub
-// ==========================
 function ensureAuthenticated(req, res, next) {
   if (!req.user || !req.user._id) {
     return res.status(401).json({ message: 'Unauthorized: User not authenticated.' });
@@ -68,15 +60,24 @@ function ensureAuthenticated(req, res, next) {
   next();
 }
 
-// ==========================
+// Validate latitude & longitude ranges
+function isValidCoordinates(lat, lon) {
+  const latitude = parseFloat(lat);
+  const longitude = parseFloat(lon);
+  if (isNaN(latitude) || isNaN(longitude)) return false;
+  if (latitude < -90 || latitude > 90) return false;
+  if (longitude < -180 || longitude > 180) return false;
+  return true;
+}
+
 // POST /checkin
-// ==========================
-router.post('/checkin', ensureAuthenticated, upload.single('faceImage'), async (req, res) => {
+router.post('/check-in', ensureAuthenticated, upload.single('faceImage'), async (req, res) => {
+
+  console.log("hello")
   try {
     const { latitude, longitude } = req.body;
 
-    // Validate coordinates presence and numeric
-    if (!latitude || !longitude || isNaN(latitude) || isNaN(longitude)) {
+    if (!isValidCoordinates(latitude, longitude)) {
       return res.status(400).json({ message: 'Valid location coordinates are required.' });
     }
 
@@ -100,7 +101,9 @@ router.post('/checkin', ensureAuthenticated, upload.single('faceImage'), async (
       return res.status(404).json({ message: 'User profile image not found for face verification.' });
     }
 
-    const profileImagePath = path.join(__dirname, '..', 'uploads', 'profileImages', user.profileImage);
+    const profileImageFilename = path.basename(user.profileImage);
+    const profileImagePath = path.join(__dirname, '..', 'uploads', 'profileImages', profileImageFilename);
+
     try {
       await fs.access(profileImagePath);
     } catch {
@@ -114,24 +117,28 @@ router.post('/checkin', ensureAuthenticated, upload.single('faceImage'), async (
     const uploadedImagePath = req.file.path;
     const faceVerificationSuccess = await verifyFace(profileImagePath, uploadedImagePath);
     if (!faceVerificationSuccess) {
+      await fs.unlink(uploadedImagePath).catch(() => {});
       return res.status(401).json({ message: 'Face verification failed.' });
     }
 
     const todayStart = new Date();
     todayStart.setHours(0, 0, 0, 0);
 
+    // Check if already checked in today
     const existingAttendance = await Attendance.findOne({
       employeeId,
+      date: todayStart,
       status: 'checked-in',
-      checkInTime: { $gte: todayStart }
     });
 
     if (existingAttendance) {
+      await fs.unlink(uploadedImagePath).catch(() => {});
       return res.status(400).json({ message: 'Already checked in for today.' });
     }
 
     const attendance = new Attendance({
       employeeId,
+      date: todayStart,
       status: 'checked-in',
       faceImagePath: uploadedImagePath,
       checkInTime: new Date(),
@@ -142,7 +149,6 @@ router.post('/checkin', ensureAuthenticated, upload.single('faceImage'), async (
 
   } catch (error) {
     console.error('Check-in error:', error);
-
     if (error instanceof multer.MulterError) {
       return res.status(400).json({ message: error.message });
     }
@@ -150,21 +156,19 @@ router.post('/checkin', ensureAuthenticated, upload.single('faceImage'), async (
   }
 });
 
-// ==========================
 // POST /checkout
-// ==========================
-router.post('/checkout', ensureAuthenticated, async (req, res) => {
+router.post('/check-out', ensureAuthenticated, async (req, res) => {
   try {
     const employeeId = req.user._id;
-
     const todayStart = new Date();
     todayStart.setHours(0, 0, 0, 0);
 
+    // Find active check-in attendance for today without checkOutTime
     const attendance = await Attendance.findOne({
       employeeId,
+      date: todayStart,
       status: 'checked-in',
-      checkInTime: { $gte: todayStart },
-      checkOutTime: { $exists: false }
+      checkOutTime: { $exists: false },
     });
 
     if (!attendance) {

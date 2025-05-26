@@ -7,14 +7,18 @@ const faceVerificationService = require('../services/faceVerificationService');
 
 // Office location (example: Delhi)
 const officeLocation = {
-  latitude: 28.6129,
-  longitude: 77.2295,
+  latitude: 30.677056,
+  longitude: 76.748139,
 };
 
 exports.checkIn = async (req, res) => {
   try {
     const { latitude, longitude } = req.body;
-    const employeeId = req.user._id;
+    const employeeId = req.user && req.user._id;
+
+    if (!employeeId) {
+      return res.status(401).json({ message: 'Unauthorized: User not authenticated.' });
+    }
 
     if (!latitude || !longitude) {
       return res.status(400).json({ message: 'Location coordinates are required.' });
@@ -40,6 +44,7 @@ exports.checkIn = async (req, res) => {
 
     const uploadedImagePath = req.file.path;
 
+    // Face verification could throw errors, so wrap it in try-catch if needed
     const isFaceVerified = await faceVerificationService.verify(profileImagePath, uploadedImagePath);
     if (!isFaceVerified) {
       return res.status(401).json({ message: 'Face verification failed.' });
@@ -50,12 +55,13 @@ exports.checkIn = async (req, res) => {
       longitude: parseFloat(longitude),
     };
     const distance = haversine(officeLocation, userLocation);
-    if (distance > 100) {
+    if (distance > 100) {  // distance in meters
       return res.status(403).json({ message: 'You must be in the office area to check in.' });
     }
 
     const todayStart = new Date();
     todayStart.setHours(0, 0, 0, 0);
+
     const existingAttendance = await Attendance.findOne({
       employeeId,
       status: 'checked-in',
@@ -85,7 +91,11 @@ exports.checkIn = async (req, res) => {
 
 exports.checkOut = async (req, res) => {
   try {
-    const employeeId = req.user._id;
+    const employeeId = req.user && req.user._id;
+
+    if (!employeeId) {
+      return res.status(401).json({ message: 'Unauthorized: User not authenticated.' });
+    }
 
     const todayStart = new Date();
     todayStart.setHours(0, 0, 0, 0);

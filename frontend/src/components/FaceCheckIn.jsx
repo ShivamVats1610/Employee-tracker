@@ -6,10 +6,14 @@ const FaceCheckIn = () => {
   const [message, setMessage] = useState('Loading models...');
 
   useEffect(() => {
-    // Load face-api models
     const loadModels = async () => {
       try {
-        const MODEL_URL = '/models'; // Your models folder path
+        const MODEL_URL = '/models'; // adjust if needed
+
+        if (!window.faceapi) {
+          setMessage('face-api.js not loaded');
+          return;
+        }
 
         await window.faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL);
         await window.faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL);
@@ -18,28 +22,22 @@ const FaceCheckIn = () => {
 
         setMessage('Models loaded, starting video...');
         setInitialized(true);
-        startVideo();
+
+        navigator.mediaDevices
+          .getUserMedia({ video: true })
+          .then((stream) => {
+            if (videoRef.current) {
+              videoRef.current.srcObject = stream;
+            }
+          })
+          .catch((err) => setMessage('Error accessing webcam: ' + err.message));
       } catch (error) {
         setMessage('Error loading models: ' + error.message);
       }
     };
 
-    const startVideo = () => {
-      navigator.mediaDevices
-        .getUserMedia({ video: {} })
-        .then((stream) => {
-          if (videoRef.current) {
-            videoRef.current.srcObject = stream;
-          }
-        })
-        .catch((err) => {
-          setMessage('Error accessing webcam: ' + err.message);
-        });
-    };
-
     loadModels();
 
-    // Cleanup video stream on unmount
     return () => {
       if (videoRef.current && videoRef.current.srcObject) {
         videoRef.current.srcObject.getTracks().forEach((track) => track.stop());
@@ -66,7 +64,7 @@ const FaceCheckIn = () => {
           setMessage(
             `Face detected! Expressions: ${JSON.stringify(detections[0].expressions)}`
           );
-          // Add your check-in logic here
+          // TODO: Add your check-in API call or logic here
         } else {
           setMessage('No face detected');
         }
@@ -80,12 +78,11 @@ const FaceCheckIn = () => {
       intervalId = setInterval(detectFaces, 1000);
     };
 
-    // If video is already playing, start detection immediately
-    if (video && !video.paused) {
+    // Start detection immediately if video already playing
+    if (video && !video.paused && !video.ended) {
       startDetection();
     }
 
-    // Add play event listener to start detection when video starts
     video.addEventListener('play', startDetection);
 
     return () => {
@@ -101,6 +98,7 @@ const FaceCheckIn = () => {
         ref={videoRef}
         autoPlay
         muted
+        playsInline
         width="480"
         height="360"
         style={{ border: '1px solid black' }}
