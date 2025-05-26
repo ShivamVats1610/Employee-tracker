@@ -18,31 +18,27 @@ const CheckInOutPage = () => {
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
 
-  const officeCoordinates = { lat: 30.677056, lon: 76.748139 }; // Delhi
+  const officeCoordinates = { lat: 30.677056, lon: 76.748139 };
   const MAX_DISTANCE_KM = 0.5;
-
-  // Check if running on localhost
   const isLocalhost = ['localhost', '127.0.0.1'].includes(window.location.hostname);
 
   useEffect(() => {
     async function fetchProfileImage(filename) {
       try {
         const url = `http://localhost:8082/api/uploads/profileImages/${filename}`;
-        console.log("Fetching image URL:", url);
         const response = await axios.get(url);
-        setProfileImage(response.data); // Set profile image here
+        setProfileImage(response.data);
       } catch (error) {
         console.error("Error fetching profile image:", error);
       }
     }
 
-    const userProfileImagePath = '1747638890833-497927884.jpg'; // replace accordingly
+    const userProfileImagePath = '1747638890833-497927884.jpg';
     fetchProfileImage(userProfileImagePath);
   }, []);
 
   useEffect(() => {
     if (isLocalhost) {
-      // Skip location check silently on localhost
       setIsInOffice(true);
       setLoadingLocation(false);
       setLocationStatus('');
@@ -102,7 +98,7 @@ const CheckInOutPage = () => {
   }, []);
 
   const calculateDistance = (lat1, lon1, lat2, lon2) => {
-    const R = 6371; // Earth's radius in km
+    const R = 6371;
     const dLat = ((lat2 - lat1) * Math.PI) / 180;
     const dLon = ((lon2 - lon1) * Math.PI) / 180;
     const a =
@@ -158,7 +154,8 @@ const CheckInOutPage = () => {
     try {
       setIsLoading(true);
       const formData = new FormData();
-      formData.append('faceImage', dataURLtoBlob(capturedImage), 'captured.jpg');
+      const blob = dataURLtoBlob(capturedImage);
+      formData.append('faceImage', blob, 'captured.jpg');
       if (!isLocalhost) {
         formData.append('latitude', latitude);
         formData.append('longitude', longitude);
@@ -223,7 +220,7 @@ const CheckInOutPage = () => {
 
       <div className="checkin-container">
         <h1 className="text-white">Employee Check-in / Check-out</h1>
-        {/* Show location status only if NOT localhost */}
+
         {!isLocalhost && (
           <p className={`location-status ${isInOffice ? 'in-office' : 'out-office'}`}>
             {loadingLocation ? 'Fetching location...' : locationStatus}

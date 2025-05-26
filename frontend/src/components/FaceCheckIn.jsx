@@ -45,7 +45,7 @@ const FaceCheckIn = () => {
     };
   }, []);
 
-  useEffect(() => {
+  useEffect(() => {  
     if (!initialized) return;
 
     const video = videoRef.current;
