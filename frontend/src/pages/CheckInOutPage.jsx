@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
+import * as faceapi from 'face-api.js';
 import './CheckInOutPage.css';
 
 const CheckInOutPage = () => {
@@ -13,7 +14,8 @@ const CheckInOutPage = () => {
   const [loadingLocation, setLoadingLocation] = useState(true);
   const [loadingWebcam, setLoadingWebcam] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
-  const [profileImage, setProfileImage] = useState(null);
+  const [profileImageUrl, setProfileImageUrl] = useState(null);
+  const [profileDescriptor, setProfileDescriptor] = useState(null);
 
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
@@ -22,20 +24,47 @@ const CheckInOutPage = () => {
   const MAX_DISTANCE_KM = 0.5;
   const isLocalhost = ['localhost', '127.0.0.1'].includes(window.location.hostname);
 
-  useEffect(() => {
-    async function fetchProfileImage(filename) {
-      try {
-        const url = `http://localhost:8082/api/uploads/profileImages/${filename}`;
-        const response = await axios.get(url);
-        setProfileImage(response.data);
-      } catch (error) {
-        console.error("Error fetching profile image:", error);
-      }
-    }
+  // Set your profile image filename here or get dynamically
+  const userProfileImagePath = '1747638890833-497927884.jpg';
 
-    const userProfileImagePath = '1747638890833-497927884.jpg';
-    fetchProfileImage(userProfileImagePath);
-  }, []);
+  useEffect(() => {
+    const loadModels = async () => {
+      const MODEL_URL = '/models'; // Make sure models are accessible here
+      await faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL);
+      await faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL);
+      await faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL);
+    };
+
+    const loadProfileDescriptor = async () => {
+      try {
+        // Replace with your backend's correct profile image URL or public URL
+        const imageUrl = `http://localhost:8082/api/uploads/profileImages/${userProfileImagePath}`;
+        setProfileImageUrl(imageUrl);
+
+        const img = await faceapi.fetchImage(imageUrl);
+        const detection = await faceapi
+          .detectSingleFace(img, new faceapi.TinyFaceDetectorOptions())
+          .withFaceLandmarks()
+          .withFaceDescriptor();
+
+        if (detection) {
+          setProfileDescriptor(detection.descriptor);
+        } else {
+          alert('❌ No face found in profile image.');
+        }
+      } catch (error) {
+        console.error('Error loading profile descriptor:', error);
+        alert('❌ Error loading profile image.');
+      }
+    };
+
+    loadModels()
+      .then(loadProfileDescriptor)
+      .catch((err) => {
+        console.error('Error loading models:', err);
+        alert('❌ Error loading face detection models.');
+      });
+  }, [userProfileImagePath]);
 
   useEffect(() => {
     if (isLocalhost) {
@@ -80,9 +109,6 @@ const CheckInOutPage = () => {
         stream = mediaStream;
         if (videoRef.current) {
           videoRef.current.srcObject = stream;
-          videoRef.current.onloadedmetadata = () => {
-            videoRef.current.play().catch(console.warn);
-          };
         }
         setLoadingWebcam(false);
       })
@@ -130,9 +156,28 @@ const CheckInOutPage = () => {
     return new Blob([array], { type: mime });
   };
 
+  const verifyFaceMatch = async () => {
+    if (!capturedImage || !profileDescriptor) return false;
+
+    const img = await faceapi.fetchImage(capturedImage);
+    const detection = await faceapi
+      .detectSingleFace(img, new faceapi.TinyFaceDetectorOptions())
+      .withFaceLandmarks()
+      .withFaceDescriptor();
+
+    if (!detection) {
+      alert('❌ No face detected in captured image.');
+      return false;
+    }
+
+    const distance = faceapi.euclideanDistance(profileDescriptor, detection.descriptor);
+    console.log('Face match distance:', distance);
+    return distance < 0.55;
+  };
+
   const handleCheckIn = async () => {
-    if (!capturedImage || !profileImage) {
-      alert('❌ Ensure image is captured and profile image is loaded.');
+    if (!capturedImage || !profileDescriptor) {
+      alert('❌ Ensure image is captured and models are ready.');
       return;
     }
 
@@ -141,18 +186,22 @@ const CheckInOutPage = () => {
       return;
     }
 
-    if (!isLocalhost) {
-      const now = new Date();
-      const hour = now.getHours();
-      const minutes = now.getMinutes();
-      if (hour > 10 || (hour === 10 && minutes > 0)) {
-        alert('❌ Check-in not allowed after 10:00 AM.');
-        return;
-      }
+    const now = new Date();
+    const hour = now.getHours();
+    const minutes = now.getMinutes();
+    if (!isLocalhost && (hour > 10 || (hour === 10 && minutes > 0))) {
+      alert('❌ Check-in not allowed after 10:00 AM.');
+      return;
     }
 
     try {
       setIsLoading(true);
+      const matched = await verifyFaceMatch();
+      if (!matched) {
+        alert('❌ Face does not match profile image.');
+        return;
+      }
+
       const formData = new FormData();
       const blob = dataURLtoBlob(capturedImage);
       formData.append('faceImage', blob, 'captured.jpg');
@@ -163,17 +212,20 @@ const CheckInOutPage = () => {
 
       const res = await axios.post('http://localhost:8082/api/attendance/check-in', formData, {
         withCredentials: true,
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
       });
 
-      if (res.status === 200 && res.data.verified) {
+      if (res.status === 200) {
         setCheckInStatus(true);
         alert('✅ Face verified. Check-in successful.');
       } else {
-        alert('❌ Face does not match profile. Check-in denied.');
+        alert('❌ Check-in failed. Please try again.');
       }
     } catch (err) {
       console.error('Check-in error:', err);
-      alert('❌ Check-in failed.');
+      alert('❌ Check-in failed. Please try again.');
     } finally {
       setIsLoading(false);
     }
@@ -185,29 +237,33 @@ const CheckInOutPage = () => {
       return;
     }
 
-    if (!isLocalhost) {
-      const now = new Date();
-      const hour = now.getHours();
-      const minutes = now.getMinutes();
-      if (hour < 19 || (hour === 19 && minutes < 30)) {
-        alert('❌ Check-out is allowed only after 7:30 PM.');
-        return;
-      }
+    const now = new Date();
+    const hour = now.getHours();
+    const minutes = now.getMinutes();
+    if (!isLocalhost && (hour < 19 || (hour === 19 && minutes < 30))) {
+      alert('❌ Check-out is allowed only after 7:30 PM.');
+      return;
     }
 
     try {
       setIsLoading(true);
-      const res = await axios.post('http://localhost:8082/api/attendance/check-out', null, {
-        withCredentials: true,
-      });
+      const res = await axios.post(
+        'http://localhost:8082/api/attendance/check-out',
+        null,
+        {
+          withCredentials: true,
+        }
+      );
 
       if (res.status === 200) {
         setCheckOutStatus(true);
         alert('✅ Checked out successfully.');
+      } else {
+        alert('❌ Check-out failed. Please try again.');
       }
     } catch (err) {
       console.error('Check-out error:', err);
-      alert('❌ Error during check-out.');
+      alert('❌ Check-out failed. Please try again.');
     } finally {
       setIsLoading(false);
     }
@@ -231,7 +287,13 @@ const CheckInOutPage = () => {
           <p>Loading webcam...</p>
         ) : (
           <>
-            <video ref={videoRef} style={{ width: '320px', borderRadius: '12px' }} autoPlay muted playsInline />
+            <video
+              ref={videoRef}
+              style={{ width: '320px', borderRadius: '12px' }}
+              autoPlay
+              muted
+              playsInline
+            />
             <div style={{ margin: '12px 0' }}>
               {!capturedImage ? (
                 <button className="check-btn" onClick={captureImage} disabled={isLoading}>
@@ -247,15 +309,23 @@ const CheckInOutPage = () => {
         )}
 
         {capturedImage && (
-          <img src={capturedImage} alt="Captured face" style={{ width: '320px', borderRadius: '12px', marginBottom: '20px' }} />
+          <img
+            src={capturedImage}
+            alt="Captured face"
+            style={{ width: '320px', borderRadius: '12px', marginBottom: '20px' }}
+          />
         )}
 
         <canvas ref={canvasRef} style={{ display: 'none' }} />
 
-        {profileImage && (
+        {profileImageUrl && (
           <>
             <p className="text-white">👤 Profile Image</p>
-            <img src={profileImage} alt="Profile" style={{ width: '120px', borderRadius: '12px', marginBottom: '20px' }} />
+            <img
+              src={profileImageUrl}
+              alt="Profile"
+              style={{ width: '120px', borderRadius: '12px', marginBottom: '20px' }}
+            />
           </>
         )}
 
@@ -263,14 +333,14 @@ const CheckInOutPage = () => {
           <button
             className="checkin-btn check-btn"
             onClick={handleCheckIn}
-            disabled={(!isLocalhost && !isInOffice) || !capturedImage || checkInStatus || isLoading}
+            disabled={!capturedImage || checkInStatus || isLoading}
           >
             ✅ Check In
           </button>
           <button
             className="checkout-btn check-btn"
             onClick={handleCheckOut}
-            disabled={(!isLocalhost && !isInOffice) || checkOutStatus || isLoading}
+            disabled={!isInOffice || checkOutStatus || isLoading}
           >
             ✅ Check Out
           </button>

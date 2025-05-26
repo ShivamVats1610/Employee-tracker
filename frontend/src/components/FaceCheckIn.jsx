@@ -1,14 +1,17 @@
 import React, { useEffect, useRef, useState } from 'react';
+import axios from 'axios';
 
 const FaceCheckIn = () => {
   const videoRef = useRef(null);
+  const canvasRef = useRef(null);
   const [initialized, setInitialized] = useState(false);
   const [message, setMessage] = useState('Loading models...');
+  const [checkingIn, setCheckingIn] = useState(false);
 
   useEffect(() => {
     const loadModels = async () => {
       try {
-        const MODEL_URL = '/models'; // adjust if needed
+        const MODEL_URL = '/models';
 
         if (!window.faceapi) {
           setMessage('face-api.js not loaded');
@@ -23,73 +26,69 @@ const FaceCheckIn = () => {
         setMessage('Models loaded, starting video...');
         setInitialized(true);
 
-        navigator.mediaDevices
-          .getUserMedia({ video: true })
-          .then((stream) => {
-            if (videoRef.current) {
-              videoRef.current.srcObject = stream;
-            }
-          })
-          .catch((err) => setMessage('Error accessing webcam: ' + err.message));
+        const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+        if (videoRef.current) {
+          videoRef.current.srcObject = stream;
+        }
       } catch (error) {
-        setMessage('Error loading models: ' + error.message);
+        setMessage('Error loading models or accessing webcam: ' + error.message);
       }
     };
 
     loadModels();
 
     return () => {
-      if (videoRef.current && videoRef.current.srcObject) {
+      if (videoRef.current?.srcObject) {
         videoRef.current.srcObject.getTracks().forEach((track) => track.stop());
       }
     };
   }, []);
 
-  useEffect(() => {  
-    if (!initialized) return;
+  const captureAndCheckIn = async () => {
+    if (!videoRef.current || !canvasRef.current) return;
 
-    const video = videoRef.current;
-    let intervalId;
+    setCheckingIn(true);
+    setMessage('Capturing face...');
 
-    const detectFaces = async () => {
-      if (!video || video.paused || video.ended) return;
+    try {
+      // Draw current frame to canvas
+      const ctx = canvasRef.current.getContext('2d');
+      ctx.drawImage(videoRef.current, 0, 0, canvasRef.current.width, canvasRef.current.height);
 
-      try {
-        const detections = await window.faceapi
-          .detectAllFaces(video, new window.faceapi.TinyFaceDetectorOptions())
-          .withFaceLandmarks()
-          .withFaceExpressions();
+      const blob = await new Promise((resolve) =>
+        canvasRef.current.toBlob(resolve, 'image/jpeg', 0.95)
+      );
 
-        if (detections.length > 0) {
-          setMessage(
-            `Face detected! Expressions: ${JSON.stringify(detections[0].expressions)}`
-          );
-          // TODO: Add your check-in API call or logic here
-        } else {
-          setMessage('No face detected');
-        }
-      } catch (error) {
-        setMessage('Face detection error: ' + error.message);
-      }
-    };
+      if (!blob) throw new Error('Failed to capture image');
 
-    const startDetection = () => {
-      if (intervalId) clearInterval(intervalId);
-      intervalId = setInterval(detectFaces, 1000);
-    };
+      setMessage('Getting location...');
+      const position = await new Promise((resolve, reject) =>
+        navigator.geolocation.getCurrentPosition(resolve, reject)
+      );
 
-    // Start detection immediately if video already playing
-    if (video && !video.paused && !video.ended) {
-      startDetection();
+      const { latitude, longitude } = position.coords;
+
+      const formData = new FormData();
+      formData.append('faceImage', blob, 'face.jpg');
+      formData.append('latitude', latitude);
+      formData.append('longitude', longitude);
+
+      setMessage('Submitting check-in...');
+      const res = await axios.post('/api/attendance/check-in', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+        withCredentials: true, // needed if your auth uses cookies
+      });
+
+      setMessage(res.data.message || 'Check-in successful!');
+    } catch (err) {
+      console.error(err);
+      setMessage(err.response?.data?.message || err.message || 'Check-in failed.');
+    } finally {
+      setCheckingIn(false);
     }
-
-    video.addEventListener('play', startDetection);
-
-    return () => {
-      clearInterval(intervalId);
-      video.removeEventListener('play', startDetection);
-    };
-  }, [initialized]);
+  };
 
   return (
     <div style={{ textAlign: 'center' }}>
@@ -103,7 +102,16 @@ const FaceCheckIn = () => {
         height="360"
         style={{ border: '1px solid black' }}
       />
+      <canvas
+        ref={canvasRef}
+        width="480"
+        height="360"
+        style={{ display: 'none' }}
+      />
       <p>{message}</p>
+      <button onClick={captureAndCheckIn} disabled={checkingIn || !initialized}>
+        {checkingIn ? 'Checking In...' : 'Check In Now'}
+      </button>
     </div>
   );
 };

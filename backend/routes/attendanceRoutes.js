@@ -13,10 +13,10 @@ const officeLocation = {
   longitude: 76.748139,
 };
 
-// Ensure directory for check-in images exists
+// Directory for check-in face images
 const checkinDir = path.join(__dirname, '..', 'uploads', 'checkinFaces');
 
-// Multer setup for face image upload
+// Multer storage config
 const checkinStorage = multer.diskStorage({
   destination: async (req, file, cb) => {
     try {
@@ -32,6 +32,7 @@ const checkinStorage = multer.diskStorage({
   }
 });
 
+// File filter for images
 const fileFilter = (req, file, cb) => {
   const allowedTypes = /jpeg|jpg|png|gif/;
   const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
@@ -47,25 +48,17 @@ const fileFilter = (req, file, cb) => {
 const upload = multer({
   storage: checkinStorage,
   fileFilter,
-  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
 });
 
-// Dummy face verification function
+// Dummy face verification function (replace with your real verification)
 async function verifyFace(profileImagePath, uploadedImagePath) {
-  // Simulate verification
+  // Simulate verification delay
   await new Promise(resolve => setTimeout(resolve, 500));
-  return true;
+  return true; // Always passes for now
 }
 
-// Authentication middleware
-function ensureAuthenticated(req, res, next) {
-  if (!req.user || !req.user._id) {
-    return res.status(401).json({ message: 'Unauthorized: User not authenticated.' });
-  }
-  next();
-}
-
-// Coordinate validation
+// Helper to validate coordinates
 function isValidCoordinates(lat, lon) {
   const latitude = parseFloat(lat);
   const longitude = parseFloat(lon);
@@ -80,9 +73,13 @@ function isValidCoordinates(lat, lon) {
 }
 
 // POST /check-in
-router.post('/check-in', ensureAuthenticated, upload.single('faceImage'), async (req, res) => {
+router.post('/check-in', upload.single('faceImage'), async (req, res) => {
   try {
-    const { latitude, longitude } = req.body;
+    const { latitude, longitude, employeeId } = req.body;
+
+    if (!employeeId) {
+      return res.status(400).json({ message: 'Employee ID is required.' });
+    }
 
     if (!isValidCoordinates(latitude, longitude)) {
       return res.status(400).json({ message: 'Valid location coordinates are required.' });
@@ -93,12 +90,13 @@ router.post('/check-in', ensureAuthenticated, upload.single('faceImage'), async 
       longitude: parseFloat(longitude),
     };
 
+    // Check if user is inside allowed office area (within 100m)
     const distance = haversine(officeLocation, userLocation);
     if (distance > 100) {
       return res.status(403).json({ message: 'You must be in the office area to check in.' });
     }
 
-    const employeeId = req.user._id;
+    // Find user in DB
     const user = await User.findById(employeeId);
     if (!user) {
       return res.status(404).json({ message: 'User not found.' });
@@ -122,12 +120,15 @@ router.post('/check-in', ensureAuthenticated, upload.single('faceImage'), async 
     }
 
     const uploadedImagePath = req.file.path;
+
+    // Verify face - replace this with your real face recognition logic
     const faceVerified = await verifyFace(profileImagePath, uploadedImagePath);
     if (!faceVerified) {
       await fs.unlink(uploadedImagePath).catch(() => {});
       return res.status(401).json({ message: 'Face verification failed.' });
     }
 
+    // Check if already checked in today
     const todayStart = new Date();
     todayStart.setHours(0, 0, 0, 0);
 
@@ -142,6 +143,7 @@ router.post('/check-in', ensureAuthenticated, upload.single('faceImage'), async 
       return res.status(400).json({ message: 'Already checked in today.' });
     }
 
+    // Save attendance record
     const attendance = new Attendance({
       employeeId,
       date: todayStart,
@@ -151,8 +153,8 @@ router.post('/check-in', ensureAuthenticated, upload.single('faceImage'), async 
     });
 
     await attendance.save();
-    res.status(200).json({ message: 'Checked in successfully.' });
 
+    res.status(200).json({ message: 'Checked in successfully.' });
   } catch (err) {
     console.error('Check-in error:', err);
     if (err instanceof multer.MulterError) {
@@ -163,9 +165,14 @@ router.post('/check-in', ensureAuthenticated, upload.single('faceImage'), async 
 });
 
 // POST /check-out
-router.post('/check-out', ensureAuthenticated, async (req, res) => {
+router.post('/check-out', async (req, res) => {
   try {
-    const employeeId = req.user._id;
+    const { employeeId } = req.body;
+
+    if (!employeeId) {
+      return res.status(400).json({ message: 'Employee ID is required.' });
+    }
+
     const todayStart = new Date();
     todayStart.setHours(0, 0, 0, 0);
 
@@ -184,8 +191,8 @@ router.post('/check-out', ensureAuthenticated, async (req, res) => {
     attendance.checkOutTime = new Date();
 
     await attendance.save();
-    res.status(200).json({ message: 'Checked out successfully.' });
 
+    res.status(200).json({ message: 'Checked out successfully.' });
   } catch (err) {
     console.error('Check-out error:', err);
     res.status(500).json({ message: 'Server error during check-out.' });
