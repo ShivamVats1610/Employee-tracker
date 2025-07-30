@@ -140,7 +140,7 @@ const CheckInOutPage = () => {
         formData.append('image', imageBlob, 'face.png');
       }
 
-      axios.post('${API_BASE_URL}/api/attendance/log', formData)
+      axios.post(`${API_BASE_URL}/api/attendance/log`, formData)
         .then(() => {
           alert(`${action} saved.`);
           if (action === 'Check In') setCheckInDone(true);
@@ -153,7 +153,12 @@ const CheckInOutPage = () => {
     };
 
     if (isProduction()) {
-      if (!navigator.geolocation) return alert('Geolocation not supported.');
+      if (!navigator.geolocation) {
+        console.warn('Geolocation not supported.');
+        saveAttendance(null); // fallback
+        return;
+      }
+
       navigator.geolocation.getCurrentPosition(
         (pos) => {
           const location = {
@@ -162,10 +167,14 @@ const CheckInOutPage = () => {
           };
           saveAttendance(location);
         },
-        () => alert('Location unavailable.')
+        (err) => {
+          console.warn('Geolocation failed:', err.message);
+          alert('Could not get location — saving without location.');
+          saveAttendance(null); // fallback if user blocks or it fails
+        }
       );
     } else {
-      saveAttendance(null);
+      saveAttendance(null); // dev mode
     }
   };
 
