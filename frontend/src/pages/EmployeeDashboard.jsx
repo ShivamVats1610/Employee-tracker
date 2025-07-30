@@ -6,7 +6,7 @@ import {
   BarChart, Bar, XAxis, YAxis
 } from 'recharts';
 import './EmployeeDashboard.css';
-
+const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
 // Attendance Pie Chart
 const AttendancePieChart = ({ workingDays, leaves }) => {
   const pieData = [
@@ -94,7 +94,7 @@ const EmployeeDashboard = () => {
 
     const fetchSummary = async () => {
       try {
-        const res = await axios.get('http://localhost:8082/api/attendance/summary', {
+        const res = await axios.get('${API_BASE_URL}/api/attendance/summary', {
           params: { employeeId: empid, month: currentMonthNumber },
         });
         setSummary(res.data);
@@ -105,7 +105,7 @@ const EmployeeDashboard = () => {
 
     const fetchStatus = async () => {
       try {
-        const res = await axios.get('http://localhost:8082/api/attendance/status', {
+        const res = await axios.get('${API_BASE_URL}/api/attendance/status', {
           params: { employeeId: empid, date: today },
         });
         setCheckInStatus(res.data.checkedIn);
@@ -119,7 +119,7 @@ const EmployeeDashboard = () => {
 
     const fetchTaskSummary = async () => {
       try {
-        const res = await axios.get('http://localhost:8082/api/reports/summary', {
+        const res = await axios.get('${API_BASE_URL}/api/reports/summary', {
           params: { employeeId: empid, month: currentMonthString }
         });
         setCompletedTasks(res.data.completed || 0);
@@ -131,7 +131,7 @@ const EmployeeDashboard = () => {
 
     const fetchLeaveStatus = async () => {
       try {
-        const res = await axios.get(`http://localhost:8082/api/leaves/apply/${empid}`);
+        const res = await axios.get(`${API_BASE_URL}/api/leaves/apply/${empid}`);
         const latest = res.data.sort((a, b) => new Date(b.date) - new Date(a.date))[0];
         setLatestLeaveStatus(latest?.status || null);
       } catch (err) {

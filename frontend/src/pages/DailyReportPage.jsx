@@ -2,7 +2,8 @@ import React, { useEffect, useState } from 'react';
 import './DailyReportPage.css';
 import axios from 'axios';
 
-const BASE_URL = 'http://localhost:8082';
+// const BASE_URL = 'http://localhost:8082';
+const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
 
 const DailyReportPage = () => {
   // Get either selected employee ID or current user's ID
@@ -21,7 +22,7 @@ const DailyReportPage = () => {
   const fetchReports = async () => {
     if (!employeeId) return;
     try {
-      const res = await axios.get(`${BASE_URL}/api/reports/my`, {
+      const res = await axios.get(`${API_BASE_URL}/api/reports/my`, {
         params: { month, employeeId }
       });
       setReports(res.data);
@@ -49,7 +50,7 @@ const DailyReportPage = () => {
         return;
       }
 
-      const res = await fetch(`${BASE_URL}/api/reports`, {
+      const res = await fetch(`${API_BASE_URL}/api/reports`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

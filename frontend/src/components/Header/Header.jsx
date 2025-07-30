@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import './Header.css';
+const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
 
 const Header = ({ role }) => {
   const navigate = useNavigate();
@@ -17,7 +18,8 @@ const Header = ({ role }) => {
 
     if (storedUsername) setUsername(storedUsername);
     if (storedProfileImg) {
-      const cleanPath = storedProfileImg.replace("http://localhost:8082/api/uploads/", "");
+      // const cleanPath = storedProfileImg.replace("http://localhost:8082/api/uploads/", "");
+      const cleanPath = storedProfileImg.replace(`${API_BASE_URL}/api/uploads/`, "");
       setProfileImg(cleanPath);
     }
   }, []);
@@ -49,7 +51,9 @@ const Header = ({ role }) => {
 
   const getFullImagePath = (imgPath) => {
     if (!imgPath) return 'assets/images/default-avatar.jpg';
-    return imgPath.startsWith('http') ? imgPath : `http://localhost:8082/api/uploads/${imgPath}`;
+    // return imgPath.startsWith('http') ? imgPath : `http://localhost:8082/api/uploads/${imgPath}`;
+    return imgPath.startsWith('http') ? imgPath : `${API_BASE_URL}/api/uploads/${imgPath}`;
+
   };
 
   return (

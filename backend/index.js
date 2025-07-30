@@ -7,14 +7,13 @@ const multer = require('multer');
 
 // Middleware
 const allowedOrigins = [
-  "http://localhost:3000",
-  "https://employee-tracker-ap2x.onrender.com"
+  "https://employee-tracker-frontend-eight.vercel.app/", // frontend URL on Vercel
+  "http://localhost:3000"                     // local dev
 ];
 
 app.use(cors({
   origin: function (origin, callback) {
-    // Allow requests with no origin (like Postman or curl)
-    if (!origin) return callback(null, true);
+    if (!origin) return callback(null, true); // allow Postman, curl
     if (allowedOrigins.includes(origin)) {
       return callback(null, true);
     } else {
@@ -24,6 +23,7 @@ app.use(cors({
   credentials: true,
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"]
 }));
+
 
 
 app.use(express.json());
