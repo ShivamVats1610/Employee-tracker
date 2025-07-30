@@ -1,8 +1,13 @@
+
 const mongoose = require('mongoose');
+require('dotenv').config(); // Load .env variables
 
 const connectDB = async () => {
     try {
-        await mongoose.connect('mongodb+srv://ritishrakhraimcl:ritish%40123@ritishcluster.e2rh7z3.mongodb.net/employeetracker?retryWrites=true&w=majority')
+        await mongoose.connect(process.env.ATLAS_URI, {
+            useNewUrlParser: true,
+            useUnifiedTopology: true
+        });
         console.log('Connected to MongoDB successfully');
     } catch (error) {
         console.log('Failed to connect:', error);
