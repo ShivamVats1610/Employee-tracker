@@ -143,35 +143,34 @@ h2 {
 @media (max-width: 768px) {
   .login-container {
     flex-direction: column;
-    height: auto;
+    height: 100vh;
   }
 
   .form-container {
     width: 100%;
-    min-height: 60vh;
-    padding: 20px 0;
+    height: 50vh;
     order: 1;
   }
 
   .image-container {
     width: 100%;
-    height: 40vh;
+    height: 50vh;
     order: 2;
   }
 
   .background-image {
     width: 100%;
     height: 100%;
-    object-fit: cover;
   }
 
   .login-box {
-    width: 90%;
-    max-width: 400px;
+    width: 100%;
+    max-width: 100%;
     padding: 20px;
-    border-radius: 8px;
+    border-radius: 0;
   }
 }
+
 
 
 @media (max-width: 480px) {
