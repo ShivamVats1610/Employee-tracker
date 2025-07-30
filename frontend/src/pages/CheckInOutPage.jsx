@@ -100,6 +100,8 @@ const CheckInOutPage = () => {
     setCapturedImage(dataUrl);
   };
 
+  const isProduction = () => window.location.hostname !== 'localhost';
+
   const dataURLtoBlob = (dataURL) => {
     const byteString = atob(dataURL.split(',')[1]);
     const mimeString = dataURL.split(',')[0].split(':')[1].split(';')[0];
@@ -138,7 +140,7 @@ const CheckInOutPage = () => {
         formData.append('image', imageBlob, 'face.png');
       }
 
-      axios.post(`${API_BASE_URL}/api/attendance/log`, formData) // ✅ FIXED HERE
+      axios.post('${API_BASE_URL}/api/attendance/log', formData)
         .then(() => {
           alert(`${action} saved.`);
           if (action === 'Check In') setCheckInDone(true);
@@ -150,35 +152,20 @@ const CheckInOutPage = () => {
         });
     };
 
-    if ('geolocation' in navigator) {
+    if (isProduction()) {
+      if (!navigator.geolocation) return alert('Geolocation not supported.');
       navigator.geolocation.getCurrentPosition(
         (pos) => {
-    const location = {
-      lat: pos.coords.latitude,
-      lng: pos.coords.longitude,
-    };
-    saveAttendance(location);
-  },
-        (err) => {
-    console.error('Location unavailable:', err);
-    switch (err.code) {
-      case 1:
-        alert('Permission denied for location. Please allow it in your browser settings.');
-        break;
-      case 2:
-        alert('Location is unavailable. Try again or use a different device.');
-        break;
-      case 3:
-        alert('Location request timed out.');
-        break;
-      default:
-        alert('Failed to retrieve location.');
-    }
-    saveAttendance();
-        }
+          const location = {
+            lat: pos.coords.latitude,
+            lng: pos.coords.longitude,
+          };
+          saveAttendance(location);
+        },
+        () => alert('Location unavailable.')
       );
     } else {
-      alert('Geolocation not supported.');
+      saveAttendance(null);
     }
   };
 
