@@ -100,8 +100,6 @@ const CheckInOutPage = () => {
     setCapturedImage(dataUrl);
   };
 
-  const isProduction = () => window.location.hostname !== 'localhost';
-
   const dataURLtoBlob = (dataURL) => {
     const byteString = atob(dataURL.split(',')[1]);
     const mimeString = dataURL.split(',')[0].split(':')[1].split(';')[0];
@@ -140,7 +138,7 @@ const CheckInOutPage = () => {
         formData.append('image', imageBlob, 'face.png');
       }
 
-      axios.post(`${API_BASE_URL}/api/attendance/log`, formData)
+      axios.post(`${API_BASE_URL}/api/attendance/log`, formData) // ✅ FIXED HERE
         .then(() => {
           alert(`${action} saved.`);
           if (action === 'Check In') setCheckInDone(true);
@@ -152,13 +150,7 @@ const CheckInOutPage = () => {
         });
     };
 
-    if (isProduction()) {
-      if (!navigator.geolocation) {
-        console.warn('Geolocation not supported.');
-        saveAttendance(null); // fallback
-        return;
-      }
-
+    if ('geolocation' in navigator) {
       navigator.geolocation.getCurrentPosition(
         (pos) => {
           const location = {
@@ -168,13 +160,12 @@ const CheckInOutPage = () => {
           saveAttendance(location);
         },
         (err) => {
-          console.warn('Geolocation failed:', err.message);
-          alert('Could not get location — saving without location.');
-          saveAttendance(null); // fallback if user blocks or it fails
+          console.error('Location unavailable:', err);
+          alert('Location unavailable. Please allow location access.');
         }
       );
     } else {
-      saveAttendance(null); // dev mode
+      alert('Geolocation not supported.');
     }
   };
 
