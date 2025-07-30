@@ -2,8 +2,7 @@ import React, { useState, useEffect } from 'react';
 import './ApplyLeavePage.css';
 import axios from 'axios';
 
-// const BASE_URL = 'http://localhost:8082';
-const API_BASE_URL = "https://employee-tracker-ap2x.onrender.com";
+const BASE_URL = 'http://localhost:8082';
 
 const ApplyLeavePage = () => {
   const userId = localStorage.getItem('empid'); // get employeeId from localStorage
@@ -34,7 +33,7 @@ const ApplyLeavePage = () => {
     if (!employeeId?.trim()) return;
     setLoading(true);
     try {
-      const res = await axios.get(`${API_BASE_URL}/api/leaves/apply/${employeeId}`);
+      const res = await axios.get(`${BASE_URL}/api/leaves/apply/${employeeId}`);
       setLeaveRequests(res.data);
     } catch (error) {
       console.error('Error fetching leave requests:', error);
@@ -61,7 +60,7 @@ const ApplyLeavePage = () => {
       });
       data.append('employeeId', userId); // include employeeId from localStorage
 
-      await axios.post(`${API_BASE_URL}/api/leaves/apply`, data);
+      await axios.post(`${BASE_URL}/api/leaves/apply`, data);
       alert('Leave applied successfully!');
       fetchLeaveRequests(userId);
       setFormData({

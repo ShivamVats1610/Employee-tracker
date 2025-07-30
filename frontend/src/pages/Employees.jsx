@@ -2,8 +2,7 @@ import React, { useState, useEffect } from 'react';
 import ClipLoader from 'react-spinners/ClipLoader';
 import './Employees.css';
 
-// const BASE_URL = 'http://localhost:8082';
-const API_BASE_URL = "https://employee-tracker-ap2x.onrender.com";
+const BASE_URL = 'http://localhost:8082';
 
 const Employees = () => {
   const [employees, setEmployees] = useState([]);
@@ -36,7 +35,7 @@ const Employees = () => {
   const fetchEmployees = async () => {
     setLoading(true);
     try {
-      const res = await fetch(`${API_BASE_URL}/api/employees`);
+      const res = await fetch(`${BASE_URL}/api/employees`);
       const data = await res.json();
       const employeeOnly = data.filter(emp => emp.role === 'Employee');
       const month = new Date().getMonth() + 1;
@@ -45,7 +44,7 @@ const Employees = () => {
         employeeOnly.map(async (emp) => {
           try {
             const summaryRes = await fetch(
-              `${API_BASE_URL}/api/attendance/summary?empid=${emp.username}&month=${month}`
+              `${BASE_URL}/api/attendance/summary?empid=${emp.username}&month=${month}`
             );
             const summaryData = await summaryRes.json();
             return {
@@ -73,7 +72,7 @@ const Employees = () => {
   const handleDelete = async (username) => {
     if (!window.confirm(`Are you sure you want to delete ${username}?`)) return;
     try {
-      const res = await fetch(`${API_BASE_URL}/api/employees/${username}`, {
+      const res = await fetch(`${BASE_URL}/api/employees/${username}`, {
         method: 'DELETE',
       });
       if (res.ok) {
@@ -99,7 +98,7 @@ const Employees = () => {
     }
 
     try {
-      const res = await fetch(`${API_BASE_URL}/api/auth/register`, {
+      const res = await fetch(`${BASE_URL}/api/auth/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username, password, role }),
