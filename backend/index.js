@@ -7,27 +7,27 @@ const multer = require('multer');
 
 // Middleware
 const allowedOrigins = [
-  "https://employee-tracker-sigma-rouge.vercel.app", // ✅ fixed
+  "https://employee-tracker-sigma-rouge.vercel.app",
   "http://localhost:3000"
 ];
 
-
 app.use(cors({
   origin: function (origin, callback) {
-  console.log("Incoming origin:", origin);
-  if (!origin) return callback(null, true);
-  if (allowedOrigins.includes(origin)) {
-    return callback(null, true);
-  } else {
-    return callback(new Error("Not allowed by CORS"));
-  }
-},
+    console.log("CORS Origin:", origin); // for debugging
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    } else {
+      return callback(new Error("Not allowed by CORS"));
+    }
+  },
   credentials: true,
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"]
 }));
 
 
 
+app.options('*', cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
