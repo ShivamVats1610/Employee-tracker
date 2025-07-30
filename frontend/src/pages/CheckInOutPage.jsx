@@ -122,7 +122,7 @@ const CheckInOutPage = () => {
     const date = new Date().toISOString().slice(0, 10);
     const time = new Date().toLocaleTimeString('en-GB');
 
-    const saveAttendance = (location = null) => {
+    const saveAttendance = (location) => {
       const formData = new FormData();
       formData.append('empid', employeeId);
       formData.append('date', date);
@@ -138,7 +138,7 @@ const CheckInOutPage = () => {
         formData.append('image', imageBlob, 'face.png');
       }
 
-      axios.post(`${API_BASE_URL}/api/attendance/log`, formData)
+      axios.post(`${API_BASE_URL}/api/attendance/log`, formData) // ✅ FIXED HERE
         .then(() => {
           alert(`${action} saved.`);
           if (action === 'Check In') setCheckInDone(true);
@@ -150,30 +150,35 @@ const CheckInOutPage = () => {
         });
     };
 
-    // Try geolocation if HTTPS
-    if (window.location.protocol === 'https:') {
-      if (!navigator.geolocation) {
-        alert('Geolocation not supported by browser. Saving without location.');
-        return saveAttendance();
-      }
-
+    if ('geolocation' in navigator) {
       navigator.geolocation.getCurrentPosition(
         (pos) => {
-          const location = {
-            lat: pos.coords.latitude,
-            lng: pos.coords.longitude,
-          };
-          saveAttendance(location);
-        },
+    const location = {
+      lat: pos.coords.latitude,
+      lng: pos.coords.longitude,
+    };
+    saveAttendance(location);
+  },
         (err) => {
-          console.error('Geolocation Error:', err);
-          alert(`Could not get location (${err.message}) — saving without location.`);
-          saveAttendance();
+    console.error('Location unavailable:', err);
+    switch (err.code) {
+      case 1:
+        alert('Permission denied for location. Please allow it in your browser settings.');
+        break;
+      case 2:
+        alert('Location is unavailable. Try again or use a different device.');
+        break;
+      case 3:
+        alert('Location request timed out.');
+        break;
+      default:
+        alert('Failed to retrieve location.');
+    }
+    saveAttendance();
         }
       );
     } else {
-      // Localhost fallback
-      saveAttendance();
+      alert('Geolocation not supported.');
     }
   };
 
