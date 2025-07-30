@@ -7,7 +7,7 @@ const multer = require('multer');
 
 // Middleware
 const allowedOrigins = [
-  "https://employee-tracker-ap2x.onrender.com/", // frontend URL on Vercel
+  "https://employee-tracker-frontend-eight.vercel.app/", // frontend URL on Vercel
   "http://localhost:3000"                     // local dev
 ];
 
