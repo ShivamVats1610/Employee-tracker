@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import './Header.css';
+import API_BASE_URL from './config';
 
 const Header = ({ role }) => {
   const navigate = useNavigate();
@@ -16,10 +17,7 @@ const Header = ({ role }) => {
     const storedProfileImg = localStorage.getItem('profileImg');
 
     if (storedUsername) setUsername(storedUsername);
-    if (storedProfileImg) {
-      const cleanPath = storedProfileImg.replace("http://localhost:8082/api/uploads/", "");
-      setProfileImg(cleanPath);
-    }
+    if (storedProfileImg) setProfileImg(storedProfileImg);
   }, []);
 
   useEffect(() => {
@@ -49,7 +47,7 @@ const Header = ({ role }) => {
 
   const getFullImagePath = (imgPath) => {
     if (!imgPath) return 'assets/images/default-avatar.jpg';
-    return imgPath.startsWith('http') ? imgPath : `http://localhost:8082/api/uploads/${imgPath}`;
+    return imgPath.startsWith('http') ? imgPath : `${API_BASE_URL}/api/uploads/${imgPath}`;
   };
 
   return (

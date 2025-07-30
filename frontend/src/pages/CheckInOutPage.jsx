@@ -3,6 +3,7 @@ import * as faceLandmarksDetection from '@tensorflow-models/face-landmarks-detec
 import '@tensorflow/tfjs-backend-webgl';
 import axios from 'axios';
 import './CheckInOutPage.css';
+import API_BASE_URL from './config';
 
 const CheckInOutPage = () => {
   const videoRef = useRef(null);
@@ -28,7 +29,7 @@ const CheckInOutPage = () => {
   const fetchTodayStatus = async (empid) => {
     const today = new Date().toISOString().slice(0, 10);
     try {
-      const res = await axios.get(`http://localhost:8082/api/attendance/status?empid=${empid}&date=${today}`);
+      const res = await axios.get(`${API_BASE_URL}/api/attendance/status?empid=${empid}&date=${today}`);
       if (res.data) {
         setCheckInDone(res.data.checkedIn);
         setCheckOutDone(res.data.checkedOut);
@@ -139,7 +140,7 @@ const CheckInOutPage = () => {
         formData.append('image', imageBlob, 'face.png');
       }
 
-      axios.post('http://localhost:8082/api/attendance/log', formData)
+      axios.post('${API_BASE_URL}/api/attendance/log', formData)
         .then(() => {
           alert(`${action} saved.`);
           if (action === 'Check In') setCheckInDone(true);

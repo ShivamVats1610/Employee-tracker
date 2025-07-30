@@ -2,7 +2,8 @@ import React, { useEffect, useState } from 'react';
 import './Leaves.css';
 import axios from 'axios';
 
-const BASE_URL = 'http://localhost:8082';
+// const BASE_URL = 'http://localhost:8082';
+import API_BASE_URL from './config';
 
 const HRLeavePage = () => {
   const [leaveRequests, setLeaveRequests] = useState([]);
@@ -14,7 +15,7 @@ const HRLeavePage = () => {
     const fetchLeaveRequests = async () => {
       try {
         setLoading(true);
-        const response = await axios.get(`${BASE_URL}/api/leaves/requests`);
+        const response = await axios.get(`${API_BASE_URL}/api/leaves/requests`);
         setLeaveRequests(response.data);
         setError(null);
       } catch (err) {
@@ -30,7 +31,7 @@ const HRLeavePage = () => {
   const handleApprove = async (id) => {
     setProcessingId(id);
     try {
-      await axios.post(`${BASE_URL}/api/leaves/approve/${id}`);
+      await axios.post(`${API_BASE_URL}/api/leaves/approve/${id}`);
       setLeaveRequests((prev) => prev.filter((request) => request._id !== id));
     } catch (err) {
       console.error('Error approving leave:', err);
@@ -43,7 +44,7 @@ const HRLeavePage = () => {
   const handleNotApprove = async (id) => {
     setProcessingId(id);
     try {
-      await axios.post(`${BASE_URL}/api/leaves/reject/${id}`);
+      await axios.post(`${API_BASE_URL}/api/leaves/reject/${id}`);
       setLeaveRequests((prev) => prev.filter((request) => request._id !== id));
     } catch (err) {
       console.error('Error rejecting leave:', err);
@@ -55,7 +56,7 @@ const HRLeavePage = () => {
 
   // ✅ Helper function for document URL
   const getFullDocumentPath = (docPath) => {
-    return docPath ? `http://localhost:8082/uploads/leaveDocs/${docPath}` : null;
+    return docPath ? `${API_BASE_URL}/uploads/leaveDocs/${docPath}` : null;
   };
 
 
@@ -93,7 +94,7 @@ const HRLeavePage = () => {
                   <div className="column" role="cell">
                     {request.document ? (
                       <img
-                        src={`http://localhost:8082/uploads/leaveDocs/${request.document}`}
+                        src={`${API_BASE_URL}/uploads/leaveDocs/${request.document}`}
                         alt="Leave document"
                         className="document-preview"
                       />

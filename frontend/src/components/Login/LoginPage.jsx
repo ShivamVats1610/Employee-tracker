@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { SnackbarProvider, useSnackbar } from 'notistack';
 import './LoginPage.css';
+import API_BASE_URL from './config';
 
 const LoginForm = ({ onLogin }) => {
   const [username, setUsername] = useState('');
@@ -29,8 +30,8 @@ const LoginForm = ({ onLogin }) => {
     }
 
     const url = isRegister
-      ? 'http://localhost:8082/api/auth/register'
-      : 'http://localhost:8082/api/auth/login';
+      ? `${API_BASE_URL}/api/auth/register`
+      : `${API_BASE_URL}/api/auth/login`;
 
     try {
       const id = `emp-${Math.floor(1000 + Math.random() * 9000)}`;
@@ -58,14 +59,14 @@ const LoginForm = ({ onLogin }) => {
         if (!isRegister) {
           localStorage.setItem('id', data.user._id);
           localStorage.setItem('role', data.user.role);
-          localStorage.setItem('empid',data.user.id);
+          localStorage.setItem('empid', data.user.id);
 
-          const profileRes = await fetch(`http://localhost:8082/api/auth/profile/${data.user._id}`);
+          const profileRes = await fetch(`${API_BASE_URL}/api/auth/profile/${data.user._id}`);
           const profileData = await profileRes.json();
 
           localStorage.setItem('username', profileData.name || data.user.username);
           if (profileData.profileImage) {
-            localStorage.setItem('profileImg', `http://localhost:8082/api/uploads/${profileData.profileImage}`);
+            localStorage.setItem('profileImg', `${API_BASE_URL}/api/uploads/${profileData.profileImage}`);
           } else {
             localStorage.setItem('profileImg', '/assets/images/default-avatar.jpg');
           }

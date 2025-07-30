@@ -11,7 +11,8 @@ const MONTHS = [
   'July', 'August', 'September', 'October', 'November', 'December'
 ];
 
-const BASE_URL = 'http://localhost:8082';
+// const BASE_URL = 'http://localhost:8082';
+const API_BASE_URL = "https://employee-tracker-ap2x.onrender.com";
 
 const CalendarPage = () => {
   const [summary, setSummary] = useState({
@@ -39,7 +40,7 @@ const CalendarPage = () => {
       if (!employeeId) return;
 
       try {
-        const res = await axios.get(`${BASE_URL}/api/attendance/summary`, {
+        const res = await axios.get(`${API_BASE_URL}/api/attendance/summary`, {
           params: {
             month: selectedMonth + 1,
             empid: employeeId,
@@ -62,7 +63,7 @@ const CalendarPage = () => {
       if (!employeeId) return;
 
       try {
-        const res = await axios.get(`${BASE_URL}/api/attendance/monthly-log`, {
+        const res = await axios.get(`${API_BASE_URL}/api/attendance/monthly-log`, {
           params: {
             month: selectedMonth + 1,
             empid: employeeId,

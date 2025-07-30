@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import './ReportsPage.css';
 
-const BASE_URL = 'http://localhost:8082';
+// const BASE_URL = 'http://localhost:8082';
+import API_BASE_URL from './config';
 
 const ReportsPage = () => {
   const [employees, setEmployees] = useState([]);
@@ -22,7 +23,7 @@ const ReportsPage = () => {
       setLoadingEmployees(true);
       setErrorEmployees(null);
       try {
-        const res = await fetch(`${BASE_URL}/api/employees`);
+        const res = await fetch(`${API_BASE_URL}/api/employees`);
         if (!res.ok) throw new Error('Failed to fetch employees');
         const data = await res.json();
         const filtered = data.filter(emp => emp.role?.toLowerCase() === 'employee');
@@ -67,7 +68,7 @@ const ReportsPage = () => {
       setErrorReports(null);
 
       try {
-        const url = `${BASE_URL}/api/reports/my?employeeId=${selectedEmployee._id}&month=${month}`;
+        const url = `${API_BASE_URL}/api/reports/my?employeeId=${selectedEmployee._id}&month=${month}`;
         const res = await fetch(url);
         const data = await res.json();
 

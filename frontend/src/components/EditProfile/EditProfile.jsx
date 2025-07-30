@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './EditProfile.css';
+import API_BASE_URL from './config';
 
 const EditProfile = () => {
   const [name, setName] = useState('');
@@ -10,7 +11,6 @@ const EditProfile = () => {
   const navigate = useNavigate();
 
   const userId = localStorage.getItem('id');
-  const API_BASE_URL = 'http://localhost:8082';
 
   useEffect(() => {
     if (!userId) {
