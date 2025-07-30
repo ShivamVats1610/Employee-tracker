@@ -7,19 +7,21 @@ const multer = require('multer');
 
 // Middleware
 const allowedOrigins = [
-  "https://employee-tracker-frontend-eight.vercel.app/", // frontend URL on Vercel
-  "http://localhost:3000"                     // local dev
+  "https://employee-tracker-sigma-rouge.vercel.app", // ✅ fixed
+  "http://localhost:3000"
 ];
+
 
 app.use(cors({
   origin: function (origin, callback) {
-    if (!origin) return callback(null, true); // allow Postman, curl
-    if (allowedOrigins.includes(origin)) {
-      return callback(null, true);
-    } else {
-      return callback(new Error("Not allowed by CORS"));
-    }
-  },
+  console.log("Incoming origin:", origin);
+  if (!origin) return callback(null, true);
+  if (allowedOrigins.includes(origin)) {
+    return callback(null, true);
+  } else {
+    return callback(new Error("Not allowed by CORS"));
+  }
+},
   credentials: true,
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"]
 }));
