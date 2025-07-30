@@ -10,7 +10,6 @@ router.post('/', async (req, res) => {
       return res.status(400).json({ error: 'All fields are required' });
     }
 
-    // Convert date string to Date object
     const parsedDate = new Date(date);
     if (isNaN(parsedDate.getTime())) {
       return res.status(400).json({ error: 'Invalid date format' });
@@ -20,7 +19,7 @@ router.post('/', async (req, res) => {
       employeeId: employeeId.trim(),
       date: parsedDate,
       task: task.trim(),
-      status: status.trim()
+      status: status.trim().toLowerCase()
     });
 
     await report.save();
@@ -31,7 +30,7 @@ router.post('/', async (req, res) => {
   }
 });
 
-// GET /api/reports/my?employeeId=xxx&month=2025-04
+// GET /api/reports/my?employeeId=xxx&month=YYYY-MM
 router.get('/my', async (req, res) => {
   try {
     const { employeeId, month } = req.query;
@@ -39,18 +38,13 @@ router.get('/my', async (req, res) => {
       return res.status(400).json({ error: 'Missing employeeId or month' });
     }
 
-    // Validate month format YYYY-MM with simple regex
     if (!/^\d{4}-\d{2}$/.test(month)) {
       return res.status(400).json({ error: 'Invalid month format. Use YYYY-MM' });
     }
 
-    const start = new Date(`${month}-01T00:00:00.000Z`);
-    if (isNaN(start.getTime())) {
-      return res.status(400).json({ error: 'Invalid start date' });
-    }
-
+    const start = new Date(`${month}-01`);
     const end = new Date(start);
-    end.setMonth(end.getMonth() + 1); // move to first day of next month
+    end.setMonth(end.getMonth() + 1);
 
     const reports = await Report.find({
       employeeId: employeeId.trim(),
@@ -60,6 +54,56 @@ router.get('/my', async (req, res) => {
     res.json(reports);
   } catch (error) {
     console.error('Error fetching reports:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// GET /api/reports/summary?employeeId=xxx&month=YYYY-MM
+router.get('/summary', async (req, res) => {
+  try {
+    const { employeeId, month } = req.query;
+    if (!employeeId || !month) {
+      return res.status(400).json({ error: 'Missing employeeId or month' });
+    }
+
+    if (!/^\d{4}-\d{2}$/.test(month)) {
+      return res.status(400).json({ error: 'Invalid month format. Use YYYY-MM' });
+    }
+
+    const start = new Date(`${month}-01`);
+    const end = new Date(start);
+    end.setMonth(end.getMonth() + 1);
+
+    const summary = await Report.aggregate([
+      {
+        $match: {
+          employeeId: employeeId.trim(),
+          date: { $gte: start, $lt: end }
+        }
+      },
+      {
+        $group: {
+          _id: "$status",
+          count: { $sum: 1 }
+        }
+      }
+    ]);
+
+    const counts = {
+      completed: 0,
+      pending: 0
+    };
+
+    summary.forEach(item => {
+      const key = item._id.toLowerCase();
+      if (counts.hasOwnProperty(key)) {
+        counts[key] = item.count;
+      }
+    });
+
+    res.json(counts);
+  } catch (error) {
+    console.error('Error fetching task summary:', error);
     res.status(500).json({ error: 'Server error' });
   }
 });

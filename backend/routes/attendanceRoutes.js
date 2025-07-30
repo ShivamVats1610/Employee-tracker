@@ -1,202 +1,134 @@
 const express = require('express');
 const router = express.Router();
+const mongoose = require('mongoose');
 const multer = require('multer');
-const haversine = require('haversine-distance');
-const path = require('path');
-const fs = require('fs').promises;
-const Attendance = require('../models/Attendance');
-const User = require('../models/User');
 
-// Office coordinates (example: Chandigarh IT Park)
-const officeLocation = {
-  latitude: 30.677056,
-  longitude: 76.748139,
-};
+// Multer setup for file upload (image stored as buffer)
+const storage = multer.memoryStorage();
+const upload = multer({ storage });
 
-// Directory for check-in face images
-const checkinDir = path.join(__dirname, '..', 'uploads', 'checkinFaces');
-
-// Multer storage config
-const checkinStorage = multer.diskStorage({
-  destination: async (req, file, cb) => {
-    try {
-      await fs.mkdir(checkinDir, { recursive: true });
-      cb(null, checkinDir);
-    } catch (err) {
-      cb(new Error('Failed to create upload directory.'));
-    }
+// Mongoose schema
+const attendanceSchema = new mongoose.Schema({
+  employeeId: { type: String, required: true },
+  date: { type: String, required: true },   // 'YYYY-MM-DD'
+  time: { type: String, required: true },   // 'HH:mm:ss'
+  action: { type: String, enum: ['Check In', 'Check Out'], required: true },
+  location: {
+    lat: Number,
+    lng: Number,
   },
-  filename: (req, file, cb) => {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
-    cb(null, `${uniqueSuffix}${path.extname(file.originalname).toLowerCase()}`);
-  }
+  image: Buffer,
+  imageType: String,
 });
 
-// File filter for images
-const fileFilter = (req, file, cb) => {
-  const allowedTypes = /jpeg|jpg|png|gif/;
-  const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
-  const mimetype = allowedTypes.test(file.mimetype.toLowerCase());
+const Attendance = mongoose.model('Attendance', attendanceSchema);
 
-  if (extname && mimetype) {
-    cb(null, true);
-  } else {
-    cb(new Error('Only image files are allowed (jpeg, jpg, png, gif).'));
-  }
-};
-
-const upload = multer({
-  storage: checkinStorage,
-  fileFilter,
-  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
-});
-
-// Dummy face verification function (replace with your real verification)
-async function verifyFace(profileImagePath, uploadedImagePath) {
-  // Simulate verification delay
-  await new Promise(resolve => setTimeout(resolve, 500));
-  return true; // Always passes for now
-}
-
-// Helper to validate coordinates
-function isValidCoordinates(lat, lon) {
-  const latitude = parseFloat(lat);
-  const longitude = parseFloat(lon);
-  return (
-    !isNaN(latitude) &&
-    !isNaN(longitude) &&
-    latitude >= -90 &&
-    latitude <= 90 &&
-    longitude >= -180 &&
-    longitude <= 180
-  );
-}
-
-// POST /check-in
-router.post('/check-in', upload.single('faceImage'), async (req, res) => {
+// POST /api/attendance/log - log check in/out
+router.post('/log', upload.single('image'), async (req, res) => {
   try {
-    const { latitude, longitude, employeeId } = req.body;
+    const { empid, employeeId, date, time, action, location } = req.body;
+    const finalEmpId = employeeId || empid;
 
-    if (!employeeId) {
-      return res.status(400).json({ message: 'Employee ID is required.' });
+    if (!finalEmpId || !date || !time || !action) {
+      return res.status(400).json({ error: 'Missing required fields' });
     }
 
-    if (!isValidCoordinates(latitude, longitude)) {
-      return res.status(400).json({ message: 'Valid location coordinates are required.' });
-    }
-
-    const userLocation = {
-      latitude: parseFloat(latitude),
-      longitude: parseFloat(longitude),
+    const attendanceData = {
+      employeeId: finalEmpId,
+      date,
+      time,
+      action,
     };
 
-    // Check if user is inside allowed office area (within 100m)
-    const distance = haversine(officeLocation, userLocation);
-    if (distance > 100) {
-      return res.status(403).json({ message: 'You must be in the office area to check in.' });
+    // Parse location JSON string if present
+    if (location) {
+      try {
+        attendanceData.location = JSON.parse(location);
+      } catch (err) {
+        return res.status(400).json({ error: 'Invalid location format' });
+      }
     }
 
-    // Find user in DB
-    const user = await User.findById(employeeId);
-    if (!user) {
-      return res.status(404).json({ message: 'User not found.' });
+    // Attach image if uploaded
+    if (req.file) {
+      attendanceData.image = req.file.buffer;
+      attendanceData.imageType = req.file.mimetype;
     }
 
-    if (!user.profileImage) {
-      return res.status(404).json({ message: 'No profile image found for face verification.' });
-    }
+    const record = new Attendance(attendanceData);
+    await record.save();
 
-    const profileImageFilename = path.basename(user.profileImage);
-    const profileImagePath = path.join(__dirname, '..', 'uploads', 'profileImages', profileImageFilename);
-
-    try {
-      await fs.access(profileImagePath);
-    } catch {
-      return res.status(404).json({ message: 'Stored profile image file does not exist.' });
-    }
-
-    if (!req.file) {
-      return res.status(400).json({ message: 'Face image is required for verification.' });
-    }
-
-    const uploadedImagePath = req.file.path;
-
-    // Verify face - replace this with your real face recognition logic
-    const faceVerified = await verifyFace(profileImagePath, uploadedImagePath);
-    if (!faceVerified) {
-      await fs.unlink(uploadedImagePath).catch(() => {});
-      return res.status(401).json({ message: 'Face verification failed.' });
-    }
-
-    // Check if already checked in today
-    const todayStart = new Date();
-    todayStart.setHours(0, 0, 0, 0);
-
-    const alreadyCheckedIn = await Attendance.findOne({
-      employeeId,
-      date: todayStart,
-      status: 'checked-in',
-    });
-
-    if (alreadyCheckedIn) {
-      await fs.unlink(uploadedImagePath).catch(() => {});
-      return res.status(400).json({ message: 'Already checked in today.' });
-    }
-
-    // Save attendance record
-    const attendance = new Attendance({
-      employeeId,
-      date: todayStart,
-      status: 'checked-in',
-      faceImagePath: uploadedImagePath,
-      checkInTime: new Date(),
-    });
-
-    await attendance.save();
-
-    res.status(200).json({ message: 'Checked in successfully.' });
+    res.json({ message: 'Attendance logged successfully' });
   } catch (err) {
-    console.error('Check-in error:', err);
-    if (err instanceof multer.MulterError) {
-      return res.status(400).json({ message: err.message });
-    }
-    res.status(500).json({ message: 'Server error during check-in.' });
+    console.error('Error saving attendance:', err.message, err.stack);
+    res.status(500).json({ error: 'Failed to log attendance' });
   }
 });
 
-// POST /check-out
-router.post('/check-out', async (req, res) => {
+// GET /api/attendance/summary?employeeId=123&month=6
+router.get('/summary', async (req, res) => {
   try {
-    const { employeeId } = req.body;
+    const { employeeId, empid, month } = req.query;
+    const finalEmpId = employeeId || empid;
 
-    if (!employeeId) {
-      return res.status(400).json({ message: 'Employee ID is required.' });
+    if (!finalEmpId || !month) {
+      return res.status(400).json({ error: 'Missing employeeId or month' });
     }
 
-    const todayStart = new Date();
-    todayStart.setHours(0, 0, 0, 0);
+    const year = new Date().getFullYear();
+    const monthStr = month.toString().padStart(2, '0');
+    const regex = new RegExp(`^${year}-${monthStr}`);
 
-    const attendance = await Attendance.findOne({
-      employeeId,
-      date: todayStart,
-      status: 'checked-in',
-      checkOutTime: { $exists: false },
+    const records = await Attendance.find({
+      employeeId: finalEmpId,
+      date: { $regex: regex },
     });
 
-    if (!attendance) {
-      return res.status(404).json({ message: 'No active check-in record found for today.' });
-    }
+    const checkInDates = new Set(records.filter(r => r.action === 'Check In').map(r => r.date));
+    const checkOutDates = new Set(records.filter(r => r.action === 'Check Out').map(r => r.date));
 
-    attendance.status = 'checked-out';
-    attendance.checkOutTime = new Date();
+    const workingDays = [...checkInDates].filter(date => checkOutDates.has(date)).length;
+    const totalDays = new Date(year, parseInt(month), 0).getDate();
 
-    await attendance.save();
-
-    res.status(200).json({ message: 'Checked out successfully.' });
+    res.json({
+      currentMonthLeaves: totalDays - workingDays,
+      totalLeaves: totalDays - workingDays,
+      workingDaysThisMonth: workingDays,
+    });
   } catch (err) {
-    console.error('Check-out error:', err);
-    res.status(500).json({ message: 'Server error during check-out.' });
+    console.error('Error fetching summary:', err.message, err.stack);
+    res.status(500).json({ error: 'Failed to fetch summary.' });
   }
 });
+router.get('/status', async (req, res) => {
+  const { employeeId, empid, date } = req.query;
+  const finalEmpId = employeeId || empid;
+
+  try {
+    const logs = await Attendance.find({
+      employeeId: finalEmpId,
+      date: date || new Date().toISOString().slice(0, 10),
+    });
+
+    const checkedIn = logs.some(log => log.action === 'Check In');
+    const checkedOut = logs.some(log => log.action === 'Check Out');
+
+    const checkInLog = logs.find(log => log.action === 'Check In');
+    const checkOutLog = logs.find(log => log.action === 'Check Out');
+
+    res.json({
+      checkedIn,
+      checkedOut,
+      checkInTime: checkInLog?.time || null,
+      checkOutTime: checkOutLog?.time || null,
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Error fetching status' });
+  }
+});
+
+
+
 
 module.exports = router;

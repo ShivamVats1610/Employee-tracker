@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import ClipLoader from 'react-spinners/ClipLoader';
 import './Employees.css';
 
+const BASE_URL = 'http://localhost:8082';
+
 const Employees = () => {
   const [employees, setEmployees] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
@@ -14,31 +16,67 @@ const Employees = () => {
     role: 'Employee',
   });
 
+  useEffect(() => {
+    fetchEmployees();
+  }, []);
+
+  useEffect(() => {
+    if (showForm) {
+      document.body.classList.add('modal-open');
+    } else {
+      document.body.classList.remove('modal-open');
+    }
+
+    return () => {
+      document.body.classList.remove('modal-open');
+    };
+  }, [showForm]);
+
   const fetchEmployees = async () => {
     setLoading(true);
     try {
-      const response = await fetch('http://localhost:8082/api/employees');
-      const data = await response.json();
+      const res = await fetch(`${BASE_URL}/api/employees`);
+      const data = await res.json();
       const employeeOnly = data.filter(emp => emp.role === 'Employee');
-      setEmployees(employeeOnly);
+      const month = new Date().getMonth() + 1;
+
+      const employeeWithStats = await Promise.all(
+        employeeOnly.map(async (emp) => {
+          try {
+            const summaryRes = await fetch(
+              `${BASE_URL}/api/attendance/summary?empid=${emp.username}&month=${month}`
+            );
+            const summaryData = await summaryRes.json();
+            return {
+              ...emp,
+              workingDays: summaryData.workingDaysThisMonth || 0,
+              leaveDays: summaryData.currentMonthLeaves || 0,
+            };
+          } catch {
+            return {
+              ...emp,
+              workingDays: 0,
+              leaveDays: 0,
+            };
+          }
+        })
+      );
+
+      setEmployees(employeeWithStats);
     } catch (err) {
       console.error('Failed to fetch employees:', err);
     }
     setLoading(false);
   };
 
-  useEffect(() => {
-    fetchEmployees();
-  }, []);
-
   const handleDelete = async (username) => {
     if (!window.confirm(`Are you sure you want to delete ${username}?`)) return;
     try {
-      const res = await fetch(`http://localhost:8082/api/employees/${username}`, {
+      const res = await fetch(`${BASE_URL}/api/employees/${username}`, {
         method: 'DELETE',
       });
       if (res.ok) {
-        setEmployees(employees.filter((emp) => emp.username !== username));
+        setEmployees(employees.filter(emp => emp.username !== username));
       }
     } catch (error) {
       console.error('Delete failed:', error);
@@ -60,7 +98,7 @@ const Employees = () => {
     }
 
     try {
-      const res = await fetch('http://localhost:8082/api/auth/register', {
+      const res = await fetch(`${BASE_URL}/api/auth/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username, password, role }),

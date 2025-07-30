@@ -25,6 +25,8 @@ const DailyReportPage = () => {
         params: { month, employeeId }
       });
       setReports(res.data);
+      const completed = res.data.filter(r => r.status === 'completed').length;
+  const pending = res.data.filter(r => r.status === 'pending').length;
     } catch (err) {
       console.error('Error fetching reports:', err);
     }
@@ -70,6 +72,7 @@ const DailyReportPage = () => {
       alert('Something went wrong');
     }
   };
+  
 
   return (
     <>

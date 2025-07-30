@@ -67,7 +67,6 @@ const Header = ({ role }) => {
             <Link to="/employees" onClick={() => setIsOpen(false)}>Manage Employees</Link>
             <Link to="/leaves" onClick={() => setIsOpen(false)}>Leave Requests</Link>
             <Link to="/reports" onClick={() => setIsOpen(false)}>Reports</Link>
-            <Link to="/calendar" onClick={() => setIsOpen(false)}>Leave Calendar</Link>
           </>
         )}
 

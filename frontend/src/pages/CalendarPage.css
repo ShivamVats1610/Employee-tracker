@@ -81,8 +81,13 @@
   }
 
   .calendar-summary p {
-    font-size: 1rem;
-  }
+  padding: 6px 10px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+  margin: 6px 0;
+  border-left: 4px solid orangered;
+}
+
 
   .month-dropdown {
     width: 100%;
@@ -97,3 +102,14 @@
   }
 }
 
+.legend-working {
+  color: #4caf50; /* Green */
+}
+
+.legend-vacant {
+  color: #2196f3; /* Blue */
+}
+
+.legend-leave {
+  color: #f44336; /* Red */
+}
