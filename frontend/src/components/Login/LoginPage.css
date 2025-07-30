@@ -8,6 +8,7 @@
   margin: 0;
   padding: 0;
   overflow: hidden;
+  overflow-y: auto;
 }
 
 /* Left image container */
@@ -142,33 +143,36 @@ h2 {
 @media (max-width: 768px) {
   .login-container {
     flex-direction: column;
-    height: 100vh;
+    height: auto;
   }
 
   .form-container {
     width: 100%;
-    height: 50vh;
+    min-height: 60vh;
+    padding: 20px 0;
     order: 1;
   }
 
   .image-container {
     width: 100%;
-    height: 50vh;
+    height: 40vh;
     order: 2;
   }
 
   .background-image {
     width: 100%;
     height: 100%;
+    object-fit: cover;
   }
 
   .login-box {
-    width: 100%;
-    max-width: 100%;
+    width: 90%;
+    max-width: 400px;
     padding: 20px;
-    border-radius: 0;
+    border-radius: 8px;
   }
 }
+
 
 @media (max-width: 480px) {
   .login-box {
