@@ -6,7 +6,7 @@ import {
   BarChart, Bar, XAxis, YAxis
 } from 'recharts';
 import './EmployeeDashboard.css';
-const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
+const API_BASE_URL = "https://employee-tracker-ap2x.onrender.com";
 // Attendance Pie Chart
 const AttendancePieChart = ({ workingDays, leaves }) => {
   const pieData = [

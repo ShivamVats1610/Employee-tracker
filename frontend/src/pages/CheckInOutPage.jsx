@@ -3,7 +3,7 @@ import * as faceLandmarksDetection from '@tensorflow-models/face-landmarks-detec
 import '@tensorflow/tfjs-backend-webgl';
 import axios from 'axios';
 import './CheckInOutPage.css';
-const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
+const API_BASE_URL = "https://employee-tracker-ap2x.onrender.com";
 
 const CheckInOutPage = () => {
   const videoRef = useRef(null);

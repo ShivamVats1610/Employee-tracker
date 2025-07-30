@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import './Header.css';
-const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
+const API_BASE_URL = "https://employee-tracker-ap2x.onrender.com";
 
 const Header = ({ role }) => {
   const navigate = useNavigate();

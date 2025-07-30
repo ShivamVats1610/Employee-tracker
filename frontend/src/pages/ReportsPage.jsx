@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import './ReportsPage.css';
 
 // const BASE_URL = 'http://localhost:8082';
-const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
+const API_BASE_URL = "https://employee-tracker-ap2x.onrender.com";
 
 const ReportsPage = () => {
   const [employees, setEmployees] = useState([]);

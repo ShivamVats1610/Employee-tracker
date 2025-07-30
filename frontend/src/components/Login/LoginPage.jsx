@@ -2,7 +2,8 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { SnackbarProvider, useSnackbar } from 'notistack';
 import './LoginPage.css';
-const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
+
+const API_BASE_URL = "https://employee-tracker-ap2x.onrender.com";
 
 const LoginForm = ({ onLogin }) => {
   const [username, setUsername] = useState('');
