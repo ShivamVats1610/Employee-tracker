@@ -143,24 +143,26 @@ h2 {
 @media (max-width: 768px) {
   .login-container {
     flex-direction: column;
-    height: 100vh;
+    height: auto; /* changed from 100vh to auto */
   }
 
   .form-container {
     width: 100%;
-    height: 50vh;
     order: 1;
+    height: auto; /* changed from 50vh to auto */
+    padding: 20px 0;
   }
 
   .image-container {
     width: 100%;
-    height: 50vh;
     order: 2;
+    height: 250px; /* or any suitable height for image */
   }
 
   .background-image {
     width: 100%;
     height: 100%;
+    object-fit: cover;
   }
 
   .login-box {
@@ -170,7 +172,6 @@ h2 {
     border-radius: 0;
   }
 }
-
 
 
 @media (max-width: 480px) {
