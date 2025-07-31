@@ -1,15 +1,17 @@
-/* Base layout */
+/* Overall layout */
 .login-container {
   display: flex;
   flex-wrap: wrap;
   width: 100vw;
+  height: 100vh;
   font-family: Arial, sans-serif;
   margin: 0;
   padding: 0;
   overflow: hidden;
+  overflow-y: auto;
 }
 
-/* Image container */
+/* Left image container */
 .image-container {
   position: relative;
   flex: 1;
@@ -35,15 +37,15 @@
   pointer-events: none;
 }
 
-/* Form container */
+/* Right form container */
 .form-container {
   flex: 1;
   min-width: 50%;
+  height: 100%;
   display: flex;
   justify-content: center;
   align-items: center;
   background-color: #000;
-  padding: 20px;
 }
 
 .login-box {
@@ -55,6 +57,8 @@
   box-sizing: border-box;
   color: white;
 }
+
+/* Other styles remain unchanged... */
 
 .logo-wrapper {
   display: flex;
@@ -135,24 +139,30 @@ h2 {
   text-decoration: none;
 }
 
-/* Tablet & mobile responsiveness */
+/* Responsive Styles */
 @media (max-width: 768px) {
   .login-container {
     flex-direction: column;
-    overflow-y: auto;
+    height: auto; /* changed from 100vh to auto */
   }
 
   .form-container {
     width: 100%;
-    height: auto;
-    order: 2;
-    padding: 20px;
+    order: 1;
+    height: auto; /* changed from 50vh to auto */
+    padding: 20px 0;
   }
 
   .image-container {
     width: 100%;
-    height: 250px;
-    order: 1;
+    order: 2;
+    height: 250px; /* or any suitable height for image */
+  }
+
+  .background-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
   }
 
   .login-box {
@@ -162,6 +172,7 @@ h2 {
     border-radius: 0;
   }
 }
+
 
 @media (max-width: 480px) {
   .login-box {
